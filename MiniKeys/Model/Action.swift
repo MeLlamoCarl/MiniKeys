@@ -9,12 +9,12 @@ enum Control: Int, CaseIterable, Codable, Identifiable {
 
     var title: String {
         switch self {
-        case .key1: "Tecla 1"
-        case .key2: "Tecla 2"
-        case .key3: "Tecla 3"
-        case .knobLeft: "Perilla · girar a la izquierda"
-        case .knobPress: "Perilla · presionar"
-        case .knobRight: "Perilla · girar a la derecha"
+        case .key1: "Key 1"
+        case .key2: "Key 2"
+        case .key3: "Key 3"
+        case .knobLeft: "Knob · Turn Left"
+        case .knobPress: "Knob · Press"
+        case .knobRight: "Knob · Turn Right"
         }
     }
 
@@ -23,9 +23,9 @@ enum Control: Int, CaseIterable, Codable, Identifiable {
         case .key1: "1"
         case .key2: "2"
         case .key3: "3"
-        case .knobLeft: "Izquierda"
-        case .knobPress: "Presionar"
-        case .knobRight: "Derecha"
+        case .knobLeft: "Left"
+        case .knobPress: "Press"
+        case .knobRight: "Right"
         }
     }
 
@@ -52,7 +52,7 @@ struct Modifiers: OptionSet, Codable, Hashable {
     static let command = Modifiers(rawValue: 0x08)
 
     static let ordered: [(Modifiers, String, String)] = [
-        (.control, "⌃", "Control"), (.option, "⌥", "Opción"), (.shift, "⇧", "Mayúsculas"), (.command, "⌘", "Comando")
+        (.control, "⌃", "Control"), (.option, "⌥", "Option"), (.shift, "⇧", "Shift"), (.command, "⌘", "Command")
     ]
 
     var symbols: String {
@@ -84,14 +84,14 @@ enum MediaKey: UInt16, CaseIterable, Codable {
 
     var title: String {
         switch self {
-        case .playPause: "Reproducir / Pausa"
-        case .previous: "Anterior"
-        case .next: "Siguiente"
-        case .volumeDown: "Bajar volumen"
-        case .volumeUp: "Subir volumen"
-        case .mute: "Silenciar"
-        case .brightnessDown: "Bajar brillo"
-        case .brightnessUp: "Subir brillo"
+        case .playPause: "Play / Pause"
+        case .previous: "Previous"
+        case .next: "Next"
+        case .volumeDown: "Volume Down"
+        case .volumeUp: "Volume Up"
+        case .mute: "Mute"
+        case .brightnessDown: "Brightness Down"
+        case .brightnessUp: "Brightness Up"
         }
     }
 
@@ -114,11 +114,11 @@ enum MouseAction: String, CaseIterable, Codable {
 
     var title: String {
         switch self {
-        case .leftClick: "Clic izquierdo"
-        case .rightClick: "Clic derecho"
-        case .middleClick: "Clic central"
-        case .scrollUp: "Rueda arriba"
-        case .scrollDown: "Rueda abajo"
+        case .leftClick: "Left Click"
+        case .rightClick: "Right Click"
+        case .middleClick: "Middle Click"
+        case .scrollUp: "Scroll up"
+        case .scrollDown: "Scroll down"
         }
     }
 
@@ -157,7 +157,7 @@ enum Action: Codable, Hashable {
         case .keys(let strokes): strokes.isEmpty ? "—" : strokes.map(\.display).joined(separator: " ")
         case .media(let media): media.title
         case .mouse(let mouse): mouse.title
-        case .disabled: "Desactivada"
+        case .disabled: "Disabled"
         }
     }
 
@@ -177,9 +177,9 @@ enum LEDMode: Int, CaseIterable, Codable {
 
     var title: String {
         switch self {
-        case .off: "Apagado"
-        case .reactive: "Al presionar"
-        case .on: "Ola de colores"
+        case .off: "Off"
+        case .reactive: "On Press"
+        case .on: "Color Wave"
         }
     }
 

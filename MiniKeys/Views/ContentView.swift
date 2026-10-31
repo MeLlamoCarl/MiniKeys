@@ -22,8 +22,8 @@ struct ContentView: View {
         .frame(minWidth: 880, minHeight: 640)
         // HIG: a concise window title (not the app name); status goes in the subtitle, not in a
         // custom badge, so the toolbar keeps the system's own glass appearance.
-        .navigationTitle("Mini teclado")
-        .navigationSubtitle(model.device.isConnected ? "Conectado" : "Desconectado")
+        .navigationTitle("Mini Keypad")
+        .navigationSubtitle(model.device.isConnected ? "Connected" : "Disconnected")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 LayerPicker()
@@ -32,9 +32,9 @@ struct ContentView: View {
                 Button {
                     model.writeAll()
                 } label: {
-                    Label("Reescribir capa", systemImage: "arrow.trianglehead.2.clockwise")
+                    Label("Rewrite Layer", systemImage: "arrow.trianglehead.2.clockwise")
                 }
-                .help("Vuelve a escribir en el teclado todas las teclas de esta capa")
+                .help("Writes every key of this layer to the keypad again")
                 .disabled(!model.device.isConnected)
             }
         }
@@ -53,11 +53,11 @@ private struct LayerPicker: View {
     @EnvironmentObject private var model: AppModel
 
     var body: some View {
-        Picker("Capa", selection: Binding(get: { model.activeLayer }, set: { model.activateLayer($0) })) {
-            ForEach(0..<AppModel.layerCount, id: \.self) { Text("Capa \($0 + 1)").tag($0) }
+        Picker("Layer", selection: Binding(get: { model.activeLayer }, set: { model.activateLayer($0) })) {
+            ForEach(0..<AppModel.layerCount, id: \.self) { Text("Layer \($0 + 1)").tag($0) }
         }
         .pickerStyle(.segmented)
-        .help("El teclado guarda 3 capas. Elegir una aquí también la activa en el teclado.")
+        .help("The keypad stores 3 layers. Choosing one here also makes it active on the keypad.")
     }
 }
 
@@ -67,11 +67,11 @@ private struct LightPanel: View {
     var body: some View {
         Card {
             VStack(alignment: .leading, spacing: 14) {
-                Label("Luz", systemImage: "rainbow")
+                Label("Light", systemImage: "rainbow")
                     .font(.headline)
 
                 VStack(alignment: .leading, spacing: 6) {
-                    Picker("Luz", selection: Binding(
+                    Picker("Light", selection: Binding(
                         get: { model.ledMode },
                         set: { if let mode = $0 { model.setLEDMode(mode) } }
                     )) {
@@ -81,7 +81,7 @@ private struct LightPanel: View {
                     }
                     .pickerStyle(.radioGroup)
                     .labelsHidden()
-                    Text("Se guarda en el teclado. Colores y animaciones vienen de fábrica: «Ola de colores» recorre las teclas en rojo, azul y verde; «Al presionar» enciende la tecla pulsada.")
+                    Text("Saved on the keypad. Colors and animations are built in: Color Wave runs over the keys in red, blue and green; On Press lights the key you press.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -89,8 +89,8 @@ private struct LightPanel: View {
 
                 Divider()
 
-                Toggle("Apagar al bloquear el Mac", isOn: $model.dimsWhenLocked)
-                    .help("Apaga la luz mientras el Mac está bloqueado o con la pantalla apagada, y la vuelve a encender al regresar. No se guarda en el teclado.")
+                Toggle("Turn off while the Mac is locked", isOn: $model.dimsWhenLocked)
+                    .help("Turns the light off while the Mac is locked or its display is asleep, and back on when you return. Not saved on the keypad.")
             }
         }
     }
@@ -102,7 +102,7 @@ private struct PresetPanel: View {
     var body: some View {
         Card {
             VStack(alignment: .leading, spacing: 10) {
-                Label("Plantillas", systemImage: "square.grid.2x2")
+                Label("Presets", systemImage: "square.grid.2x2")
                     .font(.headline)
                 ForEach(Presets.all) { preset in
                     Button {
@@ -123,7 +123,7 @@ private struct PresetPanel: View {
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.pressable)
-                    .help("Configura toda la capa \(model.activeLayer + 1) de una vez")
+                    .help("Sets up all of layer \(model.activeLayer + 1) at once")
                 }
             }
         }

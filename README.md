@@ -2,42 +2,42 @@
 
 # MiniKeys
 
-App nativa de macOS para configurar los mini teclados USB de 3 teclas + perilla (chip CH57x,
-USB `1189:8890`, vendidos como "MINI KeyBoard"). Reemplaza la herramienta de Windows del fabricante.
+A native macOS app to set up the 3-key + knob USB mini keypads (CH57x chip, USB `1189:8890`, sold
+as "MINI KeyBoard"). It replaces the vendor's Windows tool.
 
-- **Teclado en pantalla**: ves las 3 teclas y la perilla con lo que hace cada una, el brillo RGB
-  según el modo de luz, y las pulsaciones en vivo (la perilla gira en pantalla).
-- **Asignar acciones**: atajos de teclado (graba la combinación directamente, o elige teclas como
-  F13–F24), secuencias de hasta 5 teclas, multimedia (play, volumen, brillo…) y ratón (clics y rueda).
-- **Se guarda al instante** en la memoria del teclado: funciona en cualquier computador, sin la app.
-- **3 capas**, elegibles desde la barra de herramientas, el menú Teclado (⌘1–⌘3) o la barra de menús.
-- **Luz**: apagada, al presionar (la tecla pulsada se enciende, cada vez de otro color) u ola de
-  colores (una luz recorre las teclas en rojo, azul y verde), con vista previa fiel en pantalla.
-  Opción para apagarla mientras el Mac está bloqueado.
-- **Plantillas**: Juegos, Multimedia, Copiar y pegar, Navegar.
+- **On-screen keypad**: shows the 3 keys and the knob with what each one does, the RGB light as
+  the keypad shows it, and live presses (the knob turns on screen).
+- **Assign actions**: keyboard shortcuts (record them directly, or pick keys like F13–F24),
+  sequences of up to 5 keys, media keys (play, volume, brightness…) and mouse (clicks and scroll).
+- **Saved instantly** to the keypad's memory: it works on any computer, without the app.
+- **3 layers**, switchable from the toolbar, the Keypad menu (⌘1–⌘3) or the menu bar.
+- **Light**: off, on press (the pressed key lights up, in a new color each time) or color wave (a
+  light runs over the keys in red, blue and green), with a faithful on-screen preview. Option to
+  turn it off while the Mac is locked.
+- **Presets**: Games, Media, Copy & Paste, Browse.
 
-Sin drivers ni permisos especiales: la app habla con la interfaz de programación del teclado
-directamente por USB.
+No drivers or special permissions: the app talks to the keypad's programming interface directly
+over USB.
 
-## Instalar
+## Install
 
-1. Descarga `MiniKeys-<versión>.dmg` desde Releases y arrastra MiniKeys a Aplicaciones.
-2. La app no está notarizada: la primera vez, ábrela, ve a **Ajustes del Sistema › Privacidad y
-   seguridad** y pulsa **Abrir igualmente**.
+1. Download `MiniKeys-<version>.dmg` from Releases and drag MiniKeys to Applications.
+2. The app isn't notarized: the first time, open it, go to **System Settings › Privacy &
+   Security** and click **Open Anyway**.
 
-Requiere macOS 13 o posterior, Apple silicon o Intel.
+Requires macOS 13 or later, Apple silicon or Intel.
 
-## Compilar
+## Build
 
 ```bash
-scripts/run-dev.sh        # Debug, se instala en /Applications y se abre
-scripts/build-release.sh  # universal (arm64 + x86_64), firmado ad hoc → dist/MiniKeys-<versión>.dmg
+scripts/run-dev.sh        # Debug build, installed in /Applications and launched
+scripts/build-release.sh  # universal (arm64 + x86_64), ad hoc signed → dist/MiniKeys-<version>.dmg
 ```
 
-## Protocolo
+## Protocol
 
-Ver [PROTOCOL.md](PROTOCOL.md).
+See [PROTOCOL.md](PROTOCOL.md).
 
 ---
 
-Desarrollado con ayuda de herramientas de IA.
+Built with the help of AI tools.

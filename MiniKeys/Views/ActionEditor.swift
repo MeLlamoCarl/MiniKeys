@@ -7,10 +7,10 @@ struct ActionEditor: View {
     @EnvironmentObject private var model: AppModel
 
     enum Kind: String, CaseIterable, Identifiable {
-        case keys = "Teclado"
-        case media = "Multimedia"
-        case mouse = "Ratón"
-        case disabled = "Nada"
+        case keys = "Keyboard"
+        case media = "Media"
+        case mouse = "Mouse"
+        case disabled = "None"
 
         var id: String { rawValue }
 
@@ -36,13 +36,13 @@ struct ActionEditor: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(model.selected.title)
                             .font(.headline)
-                        Text(model.action(for: model.selected).map { "Ahora: \($0.label)" } ?? "Aún no configurada desde MiniKeys")
+                        Text(model.action(for: model.selected).map { "Now: \($0.label)" } ?? "Not set up from MiniKeys yet")
                             .font(.callout)
                             .foregroundStyle(.secondary)
                     }
                 }
 
-                Picker("Tipo", selection: $kind) {
+                Picker("Type", selection: $kind) {
                     ForEach(Kind.allCases) { Text($0.rawValue).tag($0) }
                 }
                 .pickerStyle(.segmented)
@@ -83,10 +83,10 @@ private struct KeyboardEditor: View {
                 Button {
                     recorder.start(appending: true) { commit(strokes + [$0]) }
                 } label: {
-                    Label("Agregar otra tecla", systemImage: "plus")
+                    Label("Add Another Key", systemImage: "plus")
                 }
                 .disabled(strokes.isEmpty || strokes.count >= Action.maxStrokes || recorder.isRecording)
-                .help("Crea una secuencia: el teclado enviará las teclas una tras otra (máx. \(Action.maxStrokes))")
+                .help("Makes a sequence: the keypad sends the keys one after another (up to \(Action.maxStrokes))")
 
                 keyMenu
 
@@ -96,14 +96,14 @@ private struct KeyboardEditor: View {
                     Button(role: .destructive) {
                         commit(Array(strokes.dropLast()))
                     } label: {
-                        Label("Quitar última", systemImage: "delete.left")
+                        Label("Remove Last", systemImage: "delete.left")
                     }
                 }
             }
 
             if let last = strokes.last {
                 HStack(spacing: 6) {
-                    Text("Modificadores de \(last.key == 0 ? "la tecla" : KeyCatalog.name(usage: last.key)):")
+                    Text("Modifiers for \(last.key == 0 ? "the key" : KeyCatalog.name(usage: last.key)):")
                         .font(.callout)
                         .foregroundStyle(.secondary)
                     ForEach(Modifiers.ordered, id: \.1) { modifier, symbol, name in
@@ -127,7 +127,7 @@ private struct KeyboardEditor: View {
                 }
             }
 
-            Text("Haz clic en el recuadro y presiona la tecla o combinación en el teclado del Mac. Para teclas que no tienes (F13–F24, teclado numérico…) usa «Elegir tecla».")
+            Text("Click the box and press the key or shortcut on the Mac keyboard. For keys you don't have (F13–F24, numeric keypad…) use Choose Key.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -148,12 +148,12 @@ private struct KeyboardEditor: View {
                 if recorder.isRecording {
                     Image(systemName: "record.circle")
                         .foregroundStyle(.red)
-                    Text(recorder.appending ? "Presiona la siguiente tecla…" : "Presiona la combinación…")
+                    Text(recorder.appending ? "Press the next key…" : "Press the shortcut…")
                         .foregroundStyle(.secondary)
                 } else if strokes.isEmpty {
                     Image(systemName: "keyboard")
                         .foregroundStyle(.secondary)
-                    Text("Haz clic para grabar un atajo")
+                    Text("Click to record a shortcut")
                         .foregroundStyle(.secondary)
                 } else {
                     ForEach(Array(strokes.enumerated()), id: \.offset) { index, stroke in
@@ -169,7 +169,7 @@ private struct KeyboardEditor: View {
                 }
                 Spacer()
                 if recorder.isRecording {
-                    Text("Clic para cancelar").font(.caption).foregroundStyle(.secondary)
+                    Text("Click to cancel").font(.caption).foregroundStyle(.secondary)
                 }
             }
             .padding(.horizontal, 12)
@@ -206,10 +206,10 @@ private struct KeyboardEditor: View {
                 }
             }
         } label: {
-            Label("Elegir tecla", systemImage: "list.bullet")
+            Label("Choose Key", systemImage: "list.bullet")
         }
         .fixedSize()
-        .help(strokes.isEmpty ? "Elige una tecla de la lista" : "Reemplaza la última tecla")
+        .help(strokes.isEmpty ? "Pick a key from the list" : "Replaces the last key")
     }
 
     private func commit(_ strokes: [KeyStroke]) {
@@ -309,12 +309,12 @@ private struct DisabledEditor: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("La tecla no enviará nada al presionarla.")
+            Text("The key won't send anything when pressed.")
                 .foregroundStyle(.secondary)
             Button {
                 model.setAction(.disabled, for: control)
             } label: {
-                Label(model.action(for: control) == .disabled ? "Desactivada" : "Desactivar", systemImage: "nosign")
+                Label(model.action(for: control) == .disabled ? "Disabled" : "Disable", systemImage: "nosign")
             }
             .disabled(model.action(for: control) == .disabled)
         }

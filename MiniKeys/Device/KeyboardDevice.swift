@@ -18,8 +18,8 @@ final class KeyboardDevice: ObservableObject {
 
         var errorDescription: String? {
             switch self {
-            case .notConnected: "El teclado no está conectado."
-            case .noEndpoint: "El teclado no aceptó la conexión."
+            case .notConnected: "The keypad isn't connected."
+            case .noEndpoint: "The keypad refused the connection."
             }
         }
     }

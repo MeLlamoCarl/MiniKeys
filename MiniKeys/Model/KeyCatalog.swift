@@ -3,13 +3,13 @@ import Foundation
 /// A key the keypad can send, identified by its USB HID usage (keyboard page 0x07).
 struct KeyInfo: Identifiable, Hashable {
     enum Group: String, CaseIterable {
-        case letters = "Letras"
-        case numbers = "Números"
-        case function = "Teclas F"
-        case navigation = "Navegación"
-        case editing = "Edición"
-        case symbols = "Símbolos"
-        case keypad = "Teclado numérico"
+        case letters = "Letters"
+        case numbers = "Numbers"
+        case function = "Function Keys"
+        case navigation = "Navigation"
+        case editing = "Editing"
+        case symbols = "Symbols"
+        case keypad = "Numeric Keypad"
     }
 
     let usage: UInt8
@@ -51,21 +51,21 @@ enum KeyCatalog {
         keys += [
             KeyInfo(usage: 0x28, name: "↩ Return", macKeyCode: 0x24, group: .editing),
             KeyInfo(usage: 0x29, name: "Esc", macKeyCode: 0x35, group: .editing),
-            KeyInfo(usage: 0x2A, name: "⌫ Borrar", macKeyCode: 0x33, group: .editing),
-            KeyInfo(usage: 0x4C, name: "⌦ Suprimir", macKeyCode: 0x75, group: .editing),
+            KeyInfo(usage: 0x2A, name: "⌫ Delete", macKeyCode: 0x33, group: .editing),
+            KeyInfo(usage: 0x4C, name: "⌦ Forward Delete", macKeyCode: 0x75, group: .editing),
             KeyInfo(usage: 0x2B, name: "⇥ Tab", macKeyCode: 0x30, group: .editing),
-            KeyInfo(usage: 0x2C, name: "Espacio", macKeyCode: 0x31, group: .editing),
-            KeyInfo(usage: 0x39, name: "⇪ Bloq Mayús", macKeyCode: 0x39, group: .editing),
+            KeyInfo(usage: 0x2C, name: "Space", macKeyCode: 0x31, group: .editing),
+            KeyInfo(usage: 0x39, name: "⇪ Caps Lock", macKeyCode: 0x39, group: .editing),
             KeyInfo(usage: 0x49, name: "Insert", macKeyCode: 0x72, group: .editing),
-            KeyInfo(usage: 0x46, name: "Impr Pant", macKeyCode: nil, group: .editing),
+            KeyInfo(usage: 0x46, name: "Print Screen", macKeyCode: nil, group: .editing),
             KeyInfo(usage: 0x52, name: "↑", macKeyCode: 0x7E, group: .navigation),
             KeyInfo(usage: 0x51, name: "↓", macKeyCode: 0x7D, group: .navigation),
             KeyInfo(usage: 0x50, name: "←", macKeyCode: 0x7B, group: .navigation),
             KeyInfo(usage: 0x4F, name: "→", macKeyCode: 0x7C, group: .navigation),
-            KeyInfo(usage: 0x4A, name: "Inicio", macKeyCode: 0x73, group: .navigation),
-            KeyInfo(usage: 0x4D, name: "Fin", macKeyCode: 0x77, group: .navigation),
-            KeyInfo(usage: 0x4B, name: "Re Pág", macKeyCode: 0x74, group: .navigation),
-            KeyInfo(usage: 0x4E, name: "Av Pág", macKeyCode: 0x79, group: .navigation),
+            KeyInfo(usage: 0x4A, name: "Home", macKeyCode: 0x73, group: .navigation),
+            KeyInfo(usage: 0x4D, name: "End", macKeyCode: 0x77, group: .navigation),
+            KeyInfo(usage: 0x4B, name: "Page Up", macKeyCode: 0x74, group: .navigation),
+            KeyInfo(usage: 0x4E, name: "Page Down", macKeyCode: 0x79, group: .navigation),
             KeyInfo(usage: 0x2D, name: "-", macKeyCode: 0x1B, group: .symbols),
             KeyInfo(usage: 0x2E, name: "=", macKeyCode: 0x18, group: .symbols),
             KeyInfo(usage: 0x2F, name: "[", macKeyCode: 0x21, group: .symbols),

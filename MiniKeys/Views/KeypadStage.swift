@@ -98,7 +98,7 @@ struct KeypadStage: View {
 
     private var knobActions: some View {
         HStack(spacing: 10) {
-            Text("Perilla")
+            Text("Knob")
                 .font(.callout.weight(.semibold))
                 .foregroundStyle(.secondary)
             ForEach([Control.knobLeft, .knobPress, .knobRight]) { control in
@@ -111,20 +111,20 @@ struct KeypadStage: View {
         HStack(spacing: 8) {
             if !model.device.isConnected {
                 Image(systemName: "cable.connector")
-                Text("Conecta el teclado por USB para guardar cambios.")
+                Text("Connect the keypad over USB to save changes.")
             } else if let last = model.log.first {
                 Image(systemName: "keyboard")
-                Text(last.control.map { "\($0.title) → \(last.text)" } ?? "Entrada: \(last.text)")
+                Text(last.control.map { "\($0.title) → \(last.text)" } ?? "Input: \(last.text)")
                     .id(last.id)
                     .transition(.opacity)
             } else {
                 Image(systemName: "hand.point.up.left")
-                Text("Haz clic en una tecla o en la perilla para cambiar lo que hace. Presiona el teclado real para verlo aquí.")
+                Text("Click a key or the knob to change what it does. Press the real keypad to see it here.")
             }
             if model.input.access != .granted {
-                Button("Ver también en segundo plano…") { model.input.requestAccess() }
+                Button("Also Show in Background…") { model.input.requestAccess() }
                     .buttonStyle(.link)
-                    .help("Con el permiso de Monitoreo de entrada, MiniKeys distingue el teclado pequeño del teclado del Mac y muestra las pulsaciones aunque esté en segundo plano.")
+                    .help("With Input Monitoring permission, MiniKeys tells the keypad apart from the Mac keyboard and shows presses even in the background.")
             }
         }
         .font(.callout)
@@ -184,7 +184,7 @@ private struct KeycapView: View {
             .animation(.spring(response: 0.18, dampingFraction: 0.6), value: isPressed)
         }
         .buttonStyle(.pressable)
-        .help("\(control.title): \(model.action(for: control)?.label ?? "sin configurar")")
+        .help("\(control.title): \(model.action(for: control)?.label ?? "not set")")
     }
 
     @ViewBuilder private var label: some View {
@@ -243,7 +243,7 @@ private struct KnobView: View {
         .animation(.spring(response: 0.18, dampingFraction: 0.6), value: isPressed)
         .contentShape(Circle())
         .onTapGesture { model.selected = .knobPress }
-        .help("Perilla: haz clic para editar la pulsación; usa las flechas para los giros")
+        .help("Knob: click to edit the press; use the arrows for the turns")
     }
 
     private func rotateButton(_ control: Control) -> some View {
@@ -274,7 +274,7 @@ private struct KnobActionChip: View {
         } label: {
             HStack(spacing: 6) {
                 Image(systemName: control.symbol)
-                Text(model.action(for: control)?.label ?? "sin configurar")
+                Text(model.action(for: control)?.label ?? "not set")
                     .lineLimit(1)
             }
             .font(.callout)

@@ -105,7 +105,7 @@ final class AppModel: ObservableObject {
         let packets = Control.allCases.flatMap { control in
             preset.config[control].map { KeypadProtocol.bind($0, to: control, layer: activeLayer + 1) } ?? []
         }
-        write(packets, success: "Plantilla «\(preset.title)» guardada en el teclado")
+        write(packets, success: "“\(preset.title)” preset saved to the keypad")
     }
 
     /// Writes every known binding of the current layer again (e.g. after the keypad was reset elsewhere).
@@ -114,23 +114,23 @@ final class AppModel: ObservableObject {
             config[control].map { KeypadProtocol.bind($0, to: control, layer: activeLayer + 1) } ?? []
         }
         guard !packets.isEmpty else {
-            showToast("Esta capa aún no tiene teclas configuradas", isError: true)
+            showToast("This layer has no keys set up yet", isError: true)
             return
         }
-        write(packets, success: "Capa \(activeLayer + 1) escrita en el teclado")
+        write(packets, success: "Layer \(activeLayer + 1) written to the keypad")
     }
 
     func setLEDMode(_ mode: LEDMode) {
         ledMode = mode
         defaults.set(mode.rawValue, forKey: Keys.ledMode)
-        write(KeypadProtocol.setLED(mode, layer: activeLayer + 1), success: "Luz: \(mode.title)")
+        write(KeypadProtocol.setLED(mode, layer: activeLayer + 1), success: "Light: \(mode.title)")
     }
 
     func activateLayer(_ layer: Int) {
         guard (0..<Self.layerCount).contains(layer) else { return }
         activeLayer = layer
         defaults.set(layer, forKey: Keys.activeLayer)
-        write(KeypadProtocol.activateLayer(layer + 1, config: layers[layer]), success: "Capa \(layer + 1) activa")
+        write(KeypadProtocol.activateLayer(layer + 1, config: layers[layer]), success: "Layer \(layer + 1) active")
     }
 
     // MARK: - Live light
@@ -210,11 +210,11 @@ final class AppModel: ObservableObject {
             trigger = .key(usage); isDown = down; fallback = KeyCatalog.name(usage: usage)
         case .consumer(let usage, let down):
             trigger = .consumer(usage); isDown = down
-            fallback = MediaKey(rawValue: usage)?.title ?? String(format: "Multimedia 0x%02X", usage)
+            fallback = MediaKey(rawValue: usage)?.title ?? String(format: "Media 0x%02X", usage)
         case .mouseButton(let button, let down):
-            trigger = .mouseButton(button); isDown = down; fallback = "Botón de ratón \(button)"
+            trigger = .mouseButton(button); isDown = down; fallback = "Mouse button \(button)"
         case .wheel(let up):
-            trigger = .wheel(up: up); isDown = true; fallback = up ? "Rueda arriba" : "Rueda abajo"
+            trigger = .wheel(up: up); isDown = true; fallback = up ? "Scroll up" : "Scroll down"
         }
 
         let controls = Control.allCases.filter { control in

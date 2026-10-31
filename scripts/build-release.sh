@@ -13,11 +13,7 @@ codesign --verify --deep --strict "$APP"
 echo "Architectures: $(lipo -archs "$APP/Contents/MacOS/MiniKeys")"
 
 mkdir -p dist
-STAGE=$(mktemp -d)
-ditto "$APP" "$STAGE/MiniKeys.app"
-ln -s /Applications "$STAGE/Applications"
 DMG="dist/MiniKeys-$VERSION.dmg"
-hdiutil create -srcfolder "$STAGE" -volname MiniKeys -fs HFS+ -format UDZO -imagekey zlib-level=9 -ov "$DMG" >/dev/null
-rm -rf "$STAGE"
+scripts/make-dmg.sh "$APP" "$DMG"
 (cd dist && shasum -a 256 "MiniKeys-$VERSION.dmg" > "MiniKeys-$VERSION.dmg.sha256")
 echo "Created $DMG"

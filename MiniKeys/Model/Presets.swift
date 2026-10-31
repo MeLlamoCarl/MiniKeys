@@ -15,7 +15,7 @@ private func key(_ usage: UInt8, _ modifiers: Modifiers = []) -> Action {
 enum Presets {
     static let all: [Preset] = [
         Preset(
-            id: "games", title: "Juegos", subtitle: "Z · X · C, perilla ← → y Espacio",
+            id: "games", title: "Games", subtitle: "Z · X · C, knob ← → and Space",
             symbol: "gamecontroller.fill",
             config: [
                 .key1: key(0x1D), .key2: key(0x1B), .key3: key(0x06),
@@ -23,7 +23,7 @@ enum Presets {
             ]
         ),
         Preset(
-            id: "media", title: "Multimedia", subtitle: "Anterior · Play · Siguiente, perilla = volumen",
+            id: "media", title: "Media", subtitle: "Previous · Play · Next, knob = volume",
             symbol: "music.note",
             config: [
                 .key1: .media(.previous), .key2: .media(.playPause), .key3: .media(.next),
@@ -31,7 +31,7 @@ enum Presets {
             ]
         ),
         Preset(
-            id: "edit", title: "Copiar y pegar", subtitle: "⌘C · ⌘V · ⌘Z, perilla = zoom",
+            id: "edit", title: "Copy & Paste", subtitle: "⌘C · ⌘V · ⌘Z, knob = zoom",
             symbol: "doc.on.clipboard.fill",
             config: [
                 .key1: key(0x06, .command), .key2: key(0x19, .command), .key3: key(0x1D, .command),
@@ -39,7 +39,7 @@ enum Presets {
             ]
         ),
         Preset(
-            id: "browse", title: "Navegar", subtitle: "Atrás · Recargar · Adelante, perilla = desplazar",
+            id: "browse", title: "Browse", subtitle: "Back · Reload · Forward, knob = scroll",
             symbol: "safari.fill",
             config: [
                 .key1: key(0x2F, .command), .key2: key(0x15, .command), .key3: key(0x30, .command),

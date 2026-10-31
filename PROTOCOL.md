@@ -1,65 +1,66 @@
-# Protocolo del teclado CH57x (USB 1189:8890)
+# CH57x keypad protocol (USB 1189:8890)
 
-Obtenido de la herramienta de Windows del fabricante y verificado en un teclado de 3 teclas + perilla.
+Taken from the vendor's Windows tool and verified on a 3-key + knob keypad.
 
-## Transporte
+## Transport
 
-- La **interfaz USB 1** (clase HID, sin colección utilizable) tiene un único endpoint
-  *interrupt OUT* `0x02` (64 bytes). macOS no le asigna driver, así que se abre con `IOUSBHost`
-  sin permisos.
-- Cada comando es una transferencia de **65 bytes**: `0x03` (report ID) + comando, relleno con ceros.
-- Con `IOUSBHostPipe` el buffer debe venir de `IOUSBHostInterface.ioData(withCapacity:)` y el
-  `completionTimeout` debe ser 0 (pipe interrupt).
-- El teclado no permite leer su configuración: la app guarda su propia copia.
+- **USB interface 1** (HID class, no usable collection) has a single *interrupt OUT* endpoint
+  `0x02` (64 bytes). macOS attaches no driver to it, so it can be opened with `IOUSBHost` without
+  any permission.
+- Each command is a **65-byte** transfer: `0x03` (report ID) + command, zero padded.
+- With `IOUSBHostPipe` the buffer must come from `IOUSBHostInterface.ioData(withCapacity:)` and
+  `completionTimeout` must be 0 (interrupt pipe).
+- The keypad's configuration can't be read back: the app keeps its own copy.
 
-## Comandos
+## Commands
 
-`L` = capa (1–3), `K` = número de control:
+`L` = layer (1–3), `K` = control number:
 
 | Control | K |
 |---|---|
-| Teclas 1–3 | 1, 2, 3 (hasta 12 en modelos más grandes) |
-| Perilla izquierda / presionar / derecha | 13, 14, 15 (perillas 2 y 3: 16–18, 19–21) |
+| Keys 1–3 | 1, 2, 3 (up to 12 on bigger models) |
+| Knob left / press / right | 13, 14, 15 (knobs 2 and 3: 16–18, 19–21) |
 
-| Comando | Bytes |
+| Command | Bytes |
 |---|---|
-| Seleccionar capa | `A1 L` (no activa la capa por sí solo; ver abajo) |
-| Guardar teclas | `AA AA` |
-| Guardar luz | `AA A1` |
+| Select layer | `A1 L` (doesn't activate the layer by itself; see below) |
+| Save keys | `AA AA` |
+| Save light | `AA A1` |
 
-**Teclado** (tipo 1), `n` = número de teclas (máx. 5), `mᵢ`/`kᵢ` = modificadores / uso HID:
+**Keyboard** (type 1), `n` = number of keys (max. 5), `mᵢ`/`kᵢ` = modifiers / HID usage:
 
 ```
 A1 L
 K (L<<4|1) n 0 m1 0
 K (L<<4|1) n 1 m1 k1
-K (L<<4|1) n 2 m2 k2      … hasta n
+K (L<<4|1) n 2 m2 k2      … up to n
 AA AA
 ```
 
-Modificadores: `01` Ctrl, `02` Shift, `04` Alt/Opción, `08` Win/Comando (`10`–`80` los derechos).
+Modifiers: `01` Ctrl, `02` Shift, `04` Alt/Option, `08` Win/Command (`10`–`80` the right-hand ones).
 
-**Multimedia** (tipo 2): `A1 L`, `K (L<<4|2) lo hi`, `AA AA` — uso Consumer de 16 bits
-(`CD` play/pausa, `B5` siguiente, `B6` anterior, `E9` vol+, `EA` vol−, `E2` silencio).
+**Media** (type 2): `A1 L`, `K (L<<4|2) lo hi`, `AA AA` — 16-bit Consumer usage
+(`CD` play/pause, `B5` next, `B6` previous, `E9` volume up, `EA` volume down, `E2` mute,
+`6F`/`70` brightness up/down).
 
-**Ratón** (tipo 3): `A1 L`, `K (L<<4|3) botones x y rueda modificadores`, `AA AA`
-(botones `01` izq., `02` der., `04` centro; rueda `01` arriba, `FF` abajo).
+**Mouse** (type 3): `A1 L`, `K (L<<4|3) buttons x y wheel modifiers`, `AA AA`
+(buttons `01` left, `02` right, `04` middle; wheel `01` up, `FF` down).
 
-**Luz** (tipo 8): `A1 L`, `B0 (L<<4|8) modo`, `AA A1` — modo `0` apagada, `1` al presionar,
-`2` ola de colores.
+**Light** (type 8): `A1 L`, `B0 (L<<4|8) mode`, `AA A1` — mode `0` off, `1` on press,
+`2` color wave.
 
-- Comportamiento filmado: en `1` se enciende la tecla pulsada, con un color nuevo en cada pulsación
-  (girar la perilla enciende la tecla 3). En `2` una luz recorre las teclas 1 → 2 → 3 (~0,3 s cada
-  una), queda oscuro ~0,9 s y repite con el siguiente color (rojo → azul → verde).
-- `B0 18 modo` **solo**, sin `A1` ni `AA A1`, cambia la luz al instante sin guardarla (no gasta la
-  flash; al reconectar vuelve el modo guardado). Latencia ~0,1–0,4 s. Reenviar el mismo modo no
-  reinicia la animación.
-- Probados sin efecto: modos 3–6, color en la mitad alta del byte (`0x12`, `0x42`, como el 8840),
-  byte de color extra y el formato `FE B0 …` / `FD FE FF` del 8840: este firmware no tiene colores
-  ni más efectos.
+- Filmed behavior: in `1` the pressed key lights up, in a new color on every press (turning the
+  knob lights key 3). In `2` a light runs over keys 1 → 2 → 3 (~0.3 s each), stays dark ~0.9 s and
+  repeats in the next color (red → blue → green).
+- `B0 18 mode` **alone**, without `A1` or `AA A1`, changes the light right away without saving it
+  (no flash wear; the saved mode comes back when the keypad is plugged in again). Latency
+  ~0.1–0.4 s. Sending the same mode again doesn't restart the animation.
+- Tried without effect: modes 3–6, a color in the high nibble (`0x12`, `0x42`, as on the 8840), an
+  extra color byte, and the 8840's `FE B0 …` / `FD FE FF` format: this firmware has no colors or
+  other effects.
 
-## Capas
+## Layers
 
-`A1 L` solo dice a qué capa van los comandos siguientes. Ni `A1 L` ni `A1 L` + `AA AA` cambian la
-capa activa: el teclado pasa a la capa `L` cuando se escribe una tecla de esa capa. Para activar
-una capa, MiniKeys reescribe sus teclas.
+`A1 L` only says which layer the next commands are for. Neither `A1 L` nor `A1 L` + `AA AA`
+changes the active layer: the keypad switches to layer `L` when a key of that layer is written.
+To activate a layer, MiniKeys writes its keys again.

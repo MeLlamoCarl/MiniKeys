@@ -43,9 +43,9 @@
 			isa = PBXProject;
 			attributes = {BuildIndependentTargetsInParallel = 1; LastSwiftUpdateCheck = 2700; LastUpgradeCheck = 2700; };
 			buildConfigurationList = A1000000000000000000000A /* Build configuration list for PBXProject "MiniKeys" */;
-			developmentRegion = es;
+			developmentRegion = en;
 			hasScannedForEncodings = 0;
-			knownRegions = (es, en, Base);
+			knownRegions = (en, Base);
 			mainGroup = A10000000000000000000004;
 			minimizedProjectReferenceProxies = 1;
 			preferredProjectObjectVersion = 77;
