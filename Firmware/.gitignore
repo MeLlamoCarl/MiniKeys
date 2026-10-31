@@ -1,0 +1,5 @@
+build/
+*.hex
+*.bin
+backup/
+scripts-flash-first.sh
