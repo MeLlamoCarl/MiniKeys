@@ -3,3 +3,4 @@ build/
 *.bin
 backup/
 scripts-flash-first.sh
+build-diag/
