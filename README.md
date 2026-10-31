@@ -5,6 +5,22 @@
 A native macOS app to set up the 3-key + knob USB mini keypads (CH57x chip, USB `1189:8890`, sold
 as "MINI KeyBoard"). It replaces the vendor's Windows tool.
 
+<p align="center"><img src="docs/images/minikeys-keypad.png" width="700" alt="The on-screen keypad in MiniKeys, lit like the real one"></p>
+
+<table>
+  <tr>
+    <td><img src="docs/images/minikeys-main.png" alt="MiniKeys: key editor, light settings and presets"></td>
+    <td><img src="docs/images/minikeys-media.png" alt="MiniKeys: media actions for a key"></td>
+  </tr>
+  <tr>
+    <td align="center">Record shortcuts, set the lights, apply presets</td>
+    <td align="center">Media keys, mouse actions and dictation</td>
+  </tr>
+</table>
+
+<p align="center"><img src="docs/images/keypad-rainbow.jpg" width="420" alt="The keypad with the rainbow effect"><br>
+<sub>The keypad running the MiniKeys firmware's rainbow effect</sub></p>
+
 - **On-screen keypad**: shows the 3 keys and the knob with what each one does, the RGB light as
   the keypad shows it, and live presses (the knob turns on screen).
 - **Assign actions**: keyboard shortcuts (record them directly, or pick keys like F13–F24),
