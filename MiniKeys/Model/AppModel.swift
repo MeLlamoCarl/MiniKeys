@@ -76,9 +76,9 @@ final class AppModel: ObservableObject {
 
         // The MiniKeys firmware only writes flash bytes that change, so syncing on every connection
         // is cheap and keeps the keypad matching the app.
-        device.$hasMiniKeysFirmware
+        device.$firmwareVersion
             .removeDuplicates()
-            .filter { $0 }
+            .filter { $0 != nil }
             .sink { [weak self] _ in self?.syncFirmware() }
             .store(in: &cancellables)
 

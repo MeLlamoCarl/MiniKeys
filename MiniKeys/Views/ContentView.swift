@@ -13,6 +13,7 @@ struct ContentView: View {
                     VStack(spacing: 16) {
                         LightPanel()
                         PresetPanel()
+                        FirmwarePanel()
                     }
                     .frame(width: 280)
                 }
@@ -185,6 +186,39 @@ private struct LabeledSlider: View {
             Text(title)
                 .frame(width: 76, alignment: .leading)
             Slider(value: $value, in: range)
+        }
+    }
+}
+
+private struct FirmwarePanel: View {
+    @EnvironmentObject private var model: AppModel
+
+    static let installerURL = URL(string: "https://github.com/MeLlamoCarl/MiniKeys-Firmware#install")!
+
+    var body: some View {
+        Card {
+            VStack(alignment: .leading, spacing: 10) {
+                Label("Firmware", systemImage: "cpu")
+                    .font(.headline)
+                if !model.device.isConnected {
+                    Text("Connect the keypad to see its firmware.")
+                        .foregroundStyle(.secondary)
+                } else if let version = model.device.firmwareVersion {
+                    Label("MiniKeys firmware \(version)", systemImage: "checkmark.seal.fill")
+                    Text("All light effects and colors are available. Updates install over USB with MiniKeys Flasher.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Link("Update Firmware…", destination: Self.installerURL)
+                } else {
+                    Label("Stock firmware", systemImage: "seal")
+                    Text("Install the MiniKeys firmware for any color, more effects and instant layers. The first install means opening the keypad once.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Link("Install MiniKeys Firmware…", destination: Self.installerURL)
+                }
+            }
         }
     }
 }

@@ -25,8 +25,10 @@ final class KeyboardDevice: ObservableObject {
     }
 
     @Published private(set) var isConnected = false
-    /// The keypad runs the MiniKeys firmware (bcdDevice 0x20xx) instead of the stock one.
-    @Published private(set) var hasMiniKeysFirmware = false
+    /// MiniKeys firmware version (bcdDevice 0x20xx), or nil for the stock firmware.
+    @Published private(set) var firmwareVersion: Int?
+
+    var hasMiniKeysFirmware: Bool { firmwareVersion != nil }
 
     private var notifyPort: IONotificationPortRef?
     private var iterators: [io_iterator_t] = []
@@ -45,6 +47,7 @@ final class KeyboardDevice: ObservableObject {
     func send(_ packets: [[UInt8]], completion: ((Result<Void, Error>) -> Void)? = nil) {
         queue.async {
             let result = Result { try self.transmit(packets) }
+            self.closeSessionWhenIdle()
             DispatchQueue.main.async { completion?(result) }
         }
     }
@@ -90,7 +93,9 @@ final class KeyboardDevice: ObservableObject {
     private func refresh() {
         let service = Self.findInterface()
         isConnected = service != 0
-        hasMiniKeysFirmware = isConnected && Self.firmwareVersion() >> 8 == 0x20
+        let bcd = isConnected ? Self.deviceVersion() : 0
+        let version = bcd >> 8 == 0x20 ? bcd & 0xFF : nil
+        if version != firmwareVersion { firmwareVersion = version }
         if service != 0 {
             IOObjectRelease(service)
         } else {
@@ -100,7 +105,7 @@ final class KeyboardDevice: ObservableObject {
 
     // MARK: - Writing
 
-    private static func firmwareVersion() -> Int {
+    private static func deviceVersion() -> Int {
         let matching = IOServiceMatching("IOUSBHostDevice") as NSMutableDictionary
         matching["idVendor"] = vendorID
         matching["idProduct"] = productID
@@ -164,6 +169,17 @@ final class KeyboardDevice: ObservableObject {
         let session = Session(interface: interface, pipe: pipe, buffer: try interface.ioData(withCapacity: Self.packetSize))
         self.session = session
         return session
+    }
+
+    private var lastUse = Date.distantPast
+
+    /// Releases the interface after a few idle seconds, so tools like the firmware flasher can open it.
+    private func closeSessionWhenIdle() {
+        lastUse = Date()
+        queue.asyncAfter(deadline: .now() + 3) { [weak self] in
+            guard let self, Date().timeIntervalSince(lastUse) >= 2.9 else { return }
+            closeSession()
+        }
     }
 
     private func closeSession() {

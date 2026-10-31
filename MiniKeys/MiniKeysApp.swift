@@ -45,6 +45,8 @@ private struct KeyboardCommands: Commands {
                 }
             }
             Divider()
+            Link("Firmware…", destination: URL(string: "https://github.com/MeLlamoCarl/MiniKeys-Firmware#install")!)
+            Divider()
             Button("Rewrite Layer on Keypad") { model.writeAll() }
                 .keyboardShortcut("r", modifiers: [.command, .shift])
                 .disabled(!model.device.isConnected)
