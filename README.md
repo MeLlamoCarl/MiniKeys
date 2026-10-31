@@ -30,9 +30,13 @@ Requires macOS 13 or later, Apple silicon or Intel.
 ## Build
 
 ```bash
+scripts/setup-signing.sh  # once per Mac: self-signed identity, keeps permissions across builds
 scripts/run-dev.sh        # Debug build, installed in /Applications and launched
-scripts/build-release.sh  # universal (arm64 + x86_64), ad hoc signed → dist/MiniKeys-<version>.dmg
+scripts/build-release.sh  # universal (arm64 + x86_64), signed → dist/MiniKeys-<version>.dmg
 ```
+
+Without `setup-signing.sh`, builds are signed ad hoc and macOS forgets the app's privacy
+permissions after every build.
 
 ## Protocol
 

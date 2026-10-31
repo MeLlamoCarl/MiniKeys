@@ -1,5 +1,5 @@
 #!/bin/zsh
-# Universal (arm64 + x86_64) Release build, ad hoc signed, packed as dist/MiniKeys-<version>.dmg.
+# Universal (arm64 + x86_64) Release build, signed (scripts/sign.sh), packed as dist/MiniKeys-<version>.dmg.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 VERSION=$(grep -m1 'MARKETING_VERSION' MiniKeys.xcodeproj/project.pbxproj | sed -E 's/.*= ([^;]+);/\1/')
@@ -8,8 +8,7 @@ xcodebuild -scheme MiniKeys -configuration Release -derivedDataPath build/releas
   CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO build 2>&1 \
   | grep -E "error:|BUILD (SUCCEEDED|FAILED)"
 APP=build/release/Build/Products/Release/MiniKeys.app
-codesign --force --deep --sign - --timestamp=none "$APP"
-codesign --verify --deep --strict "$APP"
+scripts/sign.sh "$APP"
 echo "Architectures: $(lipo -archs "$APP/Contents/MacOS/MiniKeys")"
 
 mkdir -p dist
