@@ -10,8 +10,10 @@ USB `1189:8890`, vendidos como "MINI KeyBoard"). Reemplaza la herramienta de Win
 - **Asignar acciones**: atajos de teclado (graba la combinación directamente, o elige teclas como
   F13–F24), secuencias de hasta 5 teclas, multimedia (play, volumen, brillo…) y ratón (clics y rueda).
 - **Se guarda al instante** en la memoria del teclado: funciona en cualquier computador, sin la app.
-- **3 capas**, elegibles desde la ventana o desde la barra de menú.
-- **Luz**: apagada, al presionar o siempre encendida.
+- **3 capas**, elegibles desde la barra de herramientas, el menú Teclado (⌘1–⌘3) o la barra de menús.
+- **Luz**: apagada, al presionar (la tecla pulsada se enciende, cada vez de otro color) u ola de
+  colores (una luz recorre las teclas en rojo, azul y verde), con vista previa fiel en pantalla.
+  Opción para apagarla mientras el Mac está bloqueado.
 - **Plantillas**: Juegos, Multimedia, Copiar y pegar, Navegar.
 
 Sin drivers ni permisos especiales: la app habla con la interfaz de programación del teclado

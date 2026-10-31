@@ -42,9 +42,14 @@ final class KeyboardDevice: ObservableObject {
     /// Sends the packets in order on a background queue; `completion` runs on the main queue.
     func send(_ packets: [[UInt8]], completion: ((Result<Void, Error>) -> Void)? = nil) {
         queue.async {
-            let result = Result { try Self.write(packets) }
+            let result = Result { try self.transmit(packets) }
             DispatchQueue.main.async { completion?(result) }
         }
+    }
+
+    /// Blocking variant, for the last write before the app quits.
+    func sendAndWait(_ packets: [[UInt8]]) {
+        queue.sync { _ = try? transmit(packets) }
     }
 
     // MARK: - Connection
@@ -83,7 +88,11 @@ final class KeyboardDevice: ObservableObject {
     private func refresh() {
         let service = Self.findInterface()
         isConnected = service != 0
-        if service != 0 { IOObjectRelease(service) }
+        if service != 0 {
+            IOObjectRelease(service)
+        } else {
+            queue.async { self.closeSession() }
+        }
     }
 
     // MARK: - Writing
@@ -107,26 +116,57 @@ final class KeyboardDevice: ObservableObject {
         return 0
     }
 
-    private static func write(_ packets: [[UInt8]]) throws {
-        let service = findInterface()
+    /// An open programming interface, kept between writes so live light effects stay cheap.
+    /// Only touched on `queue`.
+    private struct Session {
+        let interface: IOUSBHostInterface
+        let pipe: IOUSBHostPipe
+        let buffer: NSMutableData
+    }
+
+    private var session: Session?
+
+    private func transmit(_ packets: [[UInt8]]) throws {
+        do {
+            try Self.write(packets, using: openSession())
+        } catch {
+            // The keypad may have been unplugged and plugged in again: retry once with a new session.
+            closeSession()
+            try Self.write(packets, using: openSession())
+        }
+    }
+
+    private func openSession() throws -> Session {
+        if let session { return session }
+        let service = Self.findInterface()
         guard service != 0 else { throw DeviceError.notConnected }
         defer { IOObjectRelease(service) }
-
         let interface = try IOUSBHostInterface(__ioService: service, options: [], queue: nil, interestHandler: nil)
-        defer { interface.destroy() }
-        guard let pipe = try outPipe(of: interface) else { throw DeviceError.noEndpoint }
-
+        guard let pipe = try Self.outPipe(of: interface) else {
+            interface.destroy()
+            throw DeviceError.noEndpoint
+        }
         // IOUSBHost only transfers buffers it allocated itself.
-        let buffer = try interface.ioData(withCapacity: packetSize)
+        let session = Session(interface: interface, pipe: pipe, buffer: try interface.ioData(withCapacity: Self.packetSize))
+        self.session = session
+        return session
+    }
+
+    private func closeSession() {
+        session?.interface.destroy()
+        session = nil
+    }
+
+    private static func write(_ packets: [[UInt8]], using session: Session) throws {
         for packet in packets {
             var bytes = [UInt8](repeating: 0, count: packetSize)
             bytes[0] = reportID
             bytes.replaceSubrange(1...packet.count, with: packet)
-            buffer.replaceBytes(in: NSRange(location: 0, length: packetSize), withBytes: bytes)
+            session.buffer.replaceBytes(in: NSRange(location: 0, length: packetSize), withBytes: bytes)
             var transferred = 0
             // Interrupt pipes require a completion timeout of 0.
-            try pipe.__sendIORequest(with: buffer, bytesTransferred: &transferred, completionTimeout: 0)
-            usleep(15_000)
+            try session.pipe.__sendIORequest(with: session.buffer, bytesTransferred: &transferred, completionTimeout: 0)
+            if packets.count > 1 { usleep(15_000) }
         }
     }
 

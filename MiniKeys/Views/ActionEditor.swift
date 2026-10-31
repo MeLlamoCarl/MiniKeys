@@ -185,7 +185,7 @@ private struct KeyboardEditor: View {
             )
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.pressable)
     }
 
     private var keyMenu: some View {
@@ -355,7 +355,7 @@ private struct TileGrid<Item: Hashable>: View {
                     )
                     .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.pressable)
             }
         }
     }

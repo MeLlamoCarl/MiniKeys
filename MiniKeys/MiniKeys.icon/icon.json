@@ -6,58 +6,90 @@
     {
       "layers" : [
         {
-          "fill" : { "solid" : "extended-srgb:0.12000,0.12000,0.16000,1.00000" },
+          "blend-mode" : "normal",
+          "fill" : {
+            "solid" : "extended-srgb:0.12000,0.12000,0.16000,1.00000"
+          },
+          "glass" : true,
           "image-name" : "5 Knob Marker.svg",
           "name" : "Knob Marker"
         },
         {
-          "fill" : { "solid" : "extended-srgb:0.88000,0.89000,0.92000,1.00000" },
+          "fill" : {
+            "solid" : "extended-srgb:0.88000,0.89000,0.92000,1.00000"
+          },
           "image-name" : "4 Knob.svg",
           "name" : "Knob"
         }
       ],
       "name" : "Knob",
-      "shadow" : { "kind" : "neutral", "opacity" : 0.5 },
-      "translucency" : { "enabled" : true, "value" : 0.2 }
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.2
+      }
     },
     {
       "layers" : [
         {
-          "fill" : { "solid" : "extended-srgb:1.00000,0.24000,0.48000,1.00000" },
+          "blend-mode" : "normal",
+          "fill" : {
+            "solid" : "extended-srgb:1.00000,0.24000,0.48000,1.00000"
+          },
           "glass" : true,
           "image-name" : "3 Key 1.svg",
           "name" : "Key 1"
         },
         {
-          "fill" : { "solid" : "extended-srgb:0.18000,0.82000,0.45000,1.00000" },
+          "fill" : {
+            "solid" : "extended-srgb:0.18000,0.82000,0.45000,1.00000"
+          },
           "glass" : true,
           "image-name" : "3 Key 2.svg",
           "name" : "Key 2"
         },
         {
-          "fill" : { "solid" : "extended-srgb:0.20000,0.52000,1.00000,1.00000" },
+          "fill" : {
+            "solid" : "extended-srgb:0.20000,0.52000,1.00000,1.00000"
+          },
           "glass" : true,
           "image-name" : "3 Key 3.svg",
           "name" : "Key 3"
         }
       ],
       "name" : "Keys",
-      "shadow" : { "kind" : "neutral", "opacity" : 0.5 },
-      "translucency" : { "enabled" : true, "value" : 0.5 }
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
     },
     {
       "layers" : [
         {
-          "fill" : { "solid" : "extended-srgb:1.00000,1.00000,1.00000,1.00000" },
+          "blend-mode" : "normal",
+          "fill" : "none",
           "glass" : true,
           "image-name" : "2 Plate.svg",
           "name" : "Acrylic Plate",
-          "opacity" : 0.35
+          "opacity" : 0.1
         }
       ],
       "name" : "Plate",
-      "shadow" : { "kind" : "neutral", "opacity" : 0.5 },
-      "translucency" : { "enabled" : true, "value" : 0.8 }
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.8
+      }
     },
     {
       "layers" : [
@@ -67,11 +99,19 @@
         }
       ],
       "name" : "Background",
-      "shadow" : { "kind" : "neutral", "opacity" : 0.5 },
-      "translucency" : { "enabled" : true, "value" : 0.3 }
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.3
+      }
     }
   ],
   "supported-platforms" : {
-    "squares" : [ "macOS" ]
+    "squares" : [
+      "macOS"
+    ]
   }
 }

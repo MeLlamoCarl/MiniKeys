@@ -20,12 +20,22 @@ struct ContentView: View {
             }
         }
         .frame(minWidth: 880, minHeight: 640)
+        // HIG: a concise window title (not the app name); status goes in the subtitle, not in a
+        // custom badge, so the toolbar keeps the system's own glass appearance.
+        .navigationTitle("Mini teclado")
+        .navigationSubtitle(model.device.isConnected ? "Conectado" : "Desconectado")
         .toolbar {
-            ToolbarItem(placement: .navigation) {
-                ConnectionBadge(isConnected: model.device.isConnected)
+            ToolbarItem(placement: .primaryAction) {
+                LayerPicker()
             }
-            ToolbarItemGroup(placement: .primaryAction) {
-                LayerControls()
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    model.writeAll()
+                } label: {
+                    Label("Reescribir capa", systemImage: "arrow.trianglehead.2.clockwise")
+                }
+                .help("Vuelve a escribir en el teclado todas las teclas de esta capa")
+                .disabled(!model.device.isConnected)
             }
         }
         .background(Color(nsColor: .windowBackgroundColor))
@@ -39,7 +49,7 @@ struct ContentView: View {
     }
 }
 
-private struct LayerControls: View {
+private struct LayerPicker: View {
     @EnvironmentObject private var model: AppModel
 
     var body: some View {
@@ -48,29 +58,6 @@ private struct LayerControls: View {
         }
         .pickerStyle(.segmented)
         .help("El teclado guarda 3 capas. Elegir una aquí también la activa en el teclado.")
-        Menu {
-            Button("Reescribir esta capa en el teclado") { model.writeAll() }
-        } label: {
-            Image(systemName: "ellipsis.circle")
-        }
-        .help("Más opciones")
-    }
-}
-
-struct ConnectionBadge: View {
-    let isConnected: Bool
-
-    var body: some View {
-        HStack(spacing: 6) {
-            Circle()
-                .fill(isConnected ? Color.green : Color.orange)
-                .frame(width: 8, height: 8)
-            Text(isConnected ? "Teclado conectado" : "Conecta el teclado por USB")
-                .font(.callout.weight(.medium))
-        }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 5)
-        .background(Capsule().fill(Color.primary.opacity(0.06)))
     }
 }
 
@@ -79,18 +66,31 @@ private struct LightPanel: View {
 
     var body: some View {
         Card {
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 14) {
                 Label("Luz", systemImage: "rainbow")
                     .font(.headline)
-                ForEach(LEDMode.allCases, id: \.self) { mode in
-                    OptionRow(title: mode.title, symbol: mode.symbol, isSelected: model.ledMode == mode) {
-                        model.setLEDMode(mode)
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Picker("Luz", selection: Binding(
+                        get: { model.ledMode },
+                        set: { if let mode = $0 { model.setLEDMode(mode) } }
+                    )) {
+                        ForEach(LEDMode.allCases, id: \.self) { mode in
+                            Label(mode.title, systemImage: mode.symbol).tag(Optional(mode))
+                        }
                     }
+                    .pickerStyle(.radioGroup)
+                    .labelsHidden()
+                    Text("Se guarda en el teclado. Colores y animaciones vienen de fábrica: «Ola de colores» recorre las teclas en rojo, azul y verde; «Al presionar» enciende la tecla pulsada.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
-                Text("El efecto de colores es fijo de fábrica; solo se puede elegir cuándo se enciende.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+
+                Divider()
+
+                Toggle("Apagar al bloquear el Mac", isOn: $model.dimsWhenLocked)
+                    .help("Apaga la luz mientras el Mac está bloqueado o con la pantalla apagada, y la vuelve a encender al regresar. No se guarda en el teclado.")
             }
         }
     }
@@ -122,40 +122,11 @@ private struct PresetPanel: View {
                         .background(RoundedRectangle(cornerRadius: 8).fill(Color.primary.opacity(0.04)))
                         .contentShape(Rectangle())
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.pressable)
                     .help("Configura toda la capa \(model.activeLayer + 1) de una vez")
                 }
             }
         }
-    }
-}
-
-private struct OptionRow: View {
-    let title: String
-    let symbol: String
-    let isSelected: Bool
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 10) {
-                Image(systemName: symbol)
-                    .frame(width: 22)
-                Text(title)
-                Spacer()
-                if isSelected {
-                    Image(systemName: "checkmark")
-                        .foregroundStyle(Color.accentColor)
-                }
-            }
-            .padding(8)
-            .background(
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(isSelected ? Color.accentColor.opacity(0.15) : Color.primary.opacity(0.04))
-            )
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
     }
 }
 
@@ -189,4 +160,18 @@ private struct ToastView: View {
             .background(.regularMaterial, in: Capsule())
             .shadow(color: .black.opacity(0.15), radius: 8, y: 3)
     }
+}
+
+/// HIG: custom buttons always need a press state.
+struct PressableButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .opacity(configuration.isPressed ? 0.7 : 1)
+            .scaleEffect(configuration.isPressed ? 0.97 : 1)
+            .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
+    }
+}
+
+extension ButtonStyle where Self == PressableButtonStyle {
+    static var pressable: PressableButtonStyle { PressableButtonStyle() }
 }

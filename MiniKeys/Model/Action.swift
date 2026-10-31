@@ -31,7 +31,9 @@ enum Control: Int, CaseIterable, Codable, Identifiable {
 
     var symbol: String {
         switch self {
-        case .key1, .key2, .key3: "square"
+        case .key1: "1.square"
+        case .key2: "2.square"
+        case .key3: "3.square"
         case .knobLeft: "arrow.counterclockwise"
         case .knobPress: "smallcircle.filled.circle"
         case .knobRight: "arrow.clockwise"
@@ -177,7 +179,7 @@ enum LEDMode: Int, CaseIterable, Codable {
         switch self {
         case .off: "Apagado"
         case .reactive: "Al presionar"
-        case .on: "Siempre encendido"
+        case .on: "Ola de colores"
         }
     }
 
@@ -185,7 +187,7 @@ enum LEDMode: Int, CaseIterable, Codable {
         switch self {
         case .off: "lightbulb.slash"
         case .reactive: "hand.tap"
-        case .on: "lightbulb.max"
+        case .on: "wave.3.right"
         }
     }
 }

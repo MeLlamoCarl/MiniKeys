@@ -1,3 +1,4 @@
+import AppKit
 import Combine
 import SwiftUI
 
@@ -21,10 +22,17 @@ final class AppModel: ObservableObject {
     @Published private(set) var layers: [LayerConfig]
     @Published private(set) var activeLayer: Int
     @Published private(set) var ledMode: LEDMode?
+    /// Turns the light off while the Mac is locked or its display sleeps, and back on afterwards.
+    @Published var dimsWhenLocked: Bool {
+        didSet { defaults.set(dimsWhenLocked, forKey: Keys.dimsWhenLocked) }
+    }
+    /// Light state forced live (not saved on the keypad); `nil` while it shows its saved mode.
+    @Published private(set) var liveLightOn: Bool?
     @Published var selected: Control = .key1
     @Published private(set) var pressed: Set<Control> = []
     @Published private(set) var knobAngle: Double = 0
-    @Published private(set) var lastPress = Date.distantPast
+    /// Last key the keypad lit up in "on press" mode; turning the knob lights key 3.
+    @Published private(set) var lastFlash: (key: Control, date: Date, count: Int)?
     @Published private(set) var log: [LogEntry] = []
     @Published private(set) var toast: Toast?
 
@@ -38,6 +46,7 @@ final class AppModel: ObservableObject {
         static let layers = "layers"
         static let activeLayer = "activeLayer"
         static let ledMode = "ledMode"
+        static let dimsWhenLocked = "dimsWhenLocked"
     }
 
     init() {
@@ -50,11 +59,32 @@ final class AppModel: ObservableObject {
         }
         activeLayer = min(max(defaults.integer(forKey: Keys.activeLayer), 0), Self.layerCount - 1)
         ledMode = defaults.object(forKey: Keys.ledMode) == nil ? nil : LEDMode(rawValue: defaults.integer(forKey: Keys.ledMode))
+        dimsWhenLocked = defaults.object(forKey: Keys.dimsWhenLocked) as? Bool ?? true
 
         device.objectWillChange.sink { [weak self] in self?.objectWillChange.send() }.store(in: &cancellables)
         input.objectWillChange.sink { [weak self] in self?.objectWillChange.send() }.store(in: &cancellables)
         input.onEvent = { [weak self] in self?.handle($0) }
         input.start()
+
+        let distributed = DistributedNotificationCenter.default()
+        let workspace = NSWorkspace.shared.notificationCenter
+        for (center, name) in [
+            (distributed, Notification.Name("com.apple.screenIsLocked")),
+            (workspace, NSWorkspace.screensDidSleepNotification)
+        ] {
+            center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in self?.macWentAway() }
+        }
+        for (center, name) in [
+            (distributed, Notification.Name("com.apple.screenIsUnlocked")),
+            (workspace, NSWorkspace.screensDidWakeNotification)
+        ] {
+            center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in self?.restoreLight() }
+        }
+        NotificationCenter.default.addObserver(
+            forName: NSApplication.willTerminateNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+            self?.restoreLightBeforeQuitting()
+        }
     }
 
     var config: LayerConfig { layers[activeLayer] }
@@ -101,6 +131,27 @@ final class AppModel: ObservableObject {
         activeLayer = layer
         defaults.set(layer, forKey: Keys.activeLayer)
         write([KeypadProtocol.selectLayer(layer + 1)], success: "Capa \(layer + 1) activa")
+    }
+
+    // MARK: - Live light
+
+    /// Changes the light without saving it, so the keypad's memory isn't worn and the saved mode
+    /// comes back on its own when it is plugged in again.
+    private func macWentAway() {
+        guard dimsWhenLocked, ledMode != .off, device.isConnected else { return }
+        liveLightOn = false
+        device.send([KeypadProtocol.previewLED(.off, layer: activeLayer + 1)])
+    }
+
+    private func restoreLight() {
+        guard liveLightOn != nil else { return }
+        liveLightOn = nil
+        device.send([KeypadProtocol.previewLED(ledMode ?? .on, layer: activeLayer + 1)])
+    }
+
+    private func restoreLightBeforeQuitting() {
+        guard liveLightOn != nil else { return }
+        device.sendAndWait([KeypadProtocol.previewLED(ledMode ?? .on, layer: activeLayer + 1)])
     }
 
     private func save() {
@@ -177,7 +228,10 @@ final class AppModel: ObservableObject {
         guard !isUnmatchedModifier else { return }
 
         if isDown {
-            lastPress = Date()
+            if let control = controls.first {
+                let key: Control = [.key1, .key2, .key3].contains(control) ? control : .key3
+                lastFlash = (key, Date(), (lastFlash?.count ?? 0) + 1)
+            }
             for control in controls {
                 pressed.insert(control)
                 if control.isRotation {

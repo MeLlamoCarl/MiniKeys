@@ -37,6 +37,11 @@ enum KeypadProtocol {
         return packets
     }
 
+    /// Changes the light right away without saving it: no flash wear, lost when the keypad is unplugged.
+    static func previewLED(_ mode: LEDMode, layer: Int) -> [UInt8] {
+        [ledTarget, UInt8(clamping: layer) << 4 | 0x08, UInt8(mode.rawValue)]
+    }
+
     static func setLED(_ mode: LEDMode, layer: Int) -> [[UInt8]] {
         let layerBits = UInt8(clamping: layer) << 4
         return [selectLayer(layer), [ledTarget, layerBits | 0x08, UInt8(mode.rawValue)], commitLED]

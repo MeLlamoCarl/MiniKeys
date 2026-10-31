@@ -10,6 +10,9 @@ struct KeypadStage: View {
             TimelineView(.animation(minimumInterval: 1 / 30)) { timeline in
                 device(at: timeline.date)
             }
+            .opacity(model.device.isConnected ? 1 : 0.45)
+            .saturation(model.device.isConnected ? 1 : 0)
+            .animation(.easeInOut(duration: 0.3), value: model.device.isConnected)
             knobActions
             statusLine
         }
@@ -27,18 +30,18 @@ struct KeypadStage: View {
     // MARK: Device
 
     private func device(at date: Date) -> some View {
-        let phase = date.timeIntervalSinceReferenceDate * 0.12
-        let glow = glowLevel(at: date)
-        return HStack(spacing: 18) {
+        HStack(spacing: 18) {
             ForEach([Control.key1, .key2, .key3]) { control in
-                KeycapView(control: control, hue: (phase + Double(control.rawValue) * 0.18).truncatingRemainder(dividingBy: 1), glow: glow)
+                let light = light(under: control, at: date)
+                KeycapView(control: control, tint: light.color, glow: light.intensity)
             }
-            KnobView(glow: glow, hue: (phase + 0.7).truncatingRemainder(dividingBy: 1))
+            KnobView()
                 .padding(.leading, 10)
         }
         .padding(.horizontal, 30)
         .padding(.vertical, 26)
         .background(
+            // Clear acrylic base.
             RoundedRectangle(cornerRadius: 26, style: .continuous)
                 .fill(
                     LinearGradient(
@@ -51,25 +54,43 @@ struct KeypadStage: View {
                         .strokeBorder(LinearGradient(colors: [.white.opacity(0.35), .white.opacity(0.05)], startPoint: .top, endPoint: .bottom), lineWidth: 1)
                 )
         )
-        .background(
-            // RGB underglow seen through the acrylic base.
-            RoundedRectangle(cornerRadius: 30, style: .continuous)
-                .fill(AngularGradient(
-                    colors: [.red, .orange, .yellow, .green, .cyan, .blue, .purple, .pink, .red],
-                    center: .center, angle: .degrees(phase * 360)
-                ))
-                .padding(-6)
-                .blur(radius: 22)
-                .opacity(glow * 0.85)
-        )
     }
 
-    private func glowLevel(at date: Date) -> Double {
-        switch model.ledMode {
-        case .off: return 0
-        case .on: return 1
-        case .reactive: return max(0, 1 - date.timeIntervalSince(model.lastPress) / 0.9)
-        case nil: return 0.35
+    // MARK: Lights (as filmed on the real keypad)
+
+    private static let red = Color(red: 1, green: 0.16, blue: 0.2)
+    private static let green = Color(red: 0.15, green: 0.95, blue: 0.45)
+    private static let blue = Color(red: 0.2, green: 0.45, blue: 1)
+    private static let purple = Color(red: 0.6, green: 0.3, blue: 1)
+    /// "Wave": one light runs over keys 1 → 2 → 3, pauses, and runs again in the next color.
+    private static let waveColors = [red, blue, green]
+    private static let waveStep = 0.3
+    private static let wavePeriod = 1.8
+    /// "On press": the pressed key lights up, in a new color each time.
+    private static let pressColors = [red, green, purple, blue]
+
+    private func light(under control: Control, at date: Date) -> (color: Color, intensity: Double) {
+        let mode: LEDMode?
+        if let isOn = model.liveLightOn {
+            mode = isOn ? .on : .off
+        } else {
+            mode = model.ledMode
+        }
+        switch mode {
+        case .off:
+            return (.clear, 0)
+        case .reactive:
+            guard let flash = model.lastFlash, flash.key == control else { return (.clear, 0) }
+            let fade = max(0, 1 - date.timeIntervalSince(flash.date) / 0.6)
+            return (Self.pressColors[flash.count % Self.pressColors.count], fade)
+        case .on, nil:
+            let time = date.timeIntervalSinceReferenceDate
+            let cycle = Int(time / Self.wavePeriod)
+            let phase = time - Double(cycle) * Self.wavePeriod
+            let center = (Double(control.rawValue) - 0.5) * Self.waveStep
+            let intensity = max(0, 1 - abs(phase - center) / (Self.waveStep * 0.85))
+            // Unknown saved mode: show the wave faintly.
+            return (Self.waveColors[cycle % Self.waveColors.count], mode == nil ? intensity * 0.4 : intensity)
         }
     }
 
@@ -88,7 +109,10 @@ struct KeypadStage: View {
 
     private var statusLine: some View {
         HStack(spacing: 8) {
-            if let last = model.log.first {
+            if !model.device.isConnected {
+                Image(systemName: "cable.connector")
+                Text("Conecta el teclado por USB para guardar cambios.")
+            } else if let last = model.log.first {
                 Image(systemName: "keyboard")
                 Text(last.control.map { "\($0.title) → \(last.text)" } ?? "Entrada: \(last.text)")
                     .id(last.id)
@@ -113,13 +137,12 @@ struct KeypadStage: View {
 private struct KeycapView: View {
     @EnvironmentObject private var model: AppModel
     let control: Control
-    let hue: Double
+    let tint: Color
     let glow: Double
 
     var body: some View {
         let isPressed = model.pressed.contains(control)
         let isSelected = model.selected == control
-        let tint = Color(hue: hue, saturation: 0.8, brightness: 1)
         Button {
             model.selected = control
         } label: {
@@ -129,7 +152,7 @@ private struct KeycapView: View {
                     .overlay(
                         // Light leaking through the translucent switch housing.
                         RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .fill(RadialGradient(colors: [tint.opacity(0.55 * glow + (isPressed ? 0.4 : 0)), .clear], center: .bottom, startRadius: 2, endRadius: 70))
+                            .fill(RadialGradient(colors: [tint.opacity(0.75 * glow), .clear], center: .bottom, startRadius: 2, endRadius: 70))
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: 14, style: .continuous)
@@ -147,11 +170,20 @@ private struct KeycapView: View {
                     .padding(10)
             }
             .frame(width: 104, height: 104)
+            .background(
+                // Light spilling through the acrylic base under the key.
+                Ellipse()
+                    .fill(tint)
+                    .frame(width: 110, height: 60)
+                    .offset(y: 46)
+                    .blur(radius: 24)
+                    .opacity(glow * 0.8)
+            )
             .scaleEffect(isPressed ? 0.93 : 1)
             .offset(y: isPressed ? 3 : 0)
             .animation(.spring(response: 0.18, dampingFraction: 0.6), value: isPressed)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.pressable)
         .help("\(control.title): \(model.action(for: control)?.label ?? "sin configurar")")
     }
 
@@ -179,17 +211,11 @@ private struct KeycapView: View {
 
 private struct KnobView: View {
     @EnvironmentObject private var model: AppModel
-    let glow: Double
-    let hue: Double
 
     var body: some View {
         let isPressed = model.pressed.contains(.knobPress)
         let isSelected = [Control.knobLeft, .knobPress, .knobRight].contains(model.selected)
         ZStack {
-            Circle()
-                .fill(Color(hue: hue, saturation: 0.8, brightness: 1).opacity(0.6 * glow))
-                .blur(radius: 14)
-                .frame(width: 120, height: 120)
             Circle()
                 .fill(AngularGradient(
                     colors: [Color(white: 0.75), Color(white: 0.35), Color(white: 0.85), Color(white: 0.3), Color(white: 0.75)],
@@ -231,7 +257,7 @@ private struct KnobView: View {
                 .frame(width: 26, height: 26)
                 .background(Circle().fill(.white.opacity(isActive ? 0.25 : 0.08)))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.pressable)
         .help(control.title)
     }
 }
@@ -259,7 +285,7 @@ private struct KnobActionChip: View {
             )
             .overlay(Capsule().strokeBorder(isSelected ? Color.accentColor : .clear, lineWidth: 2))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.pressable)
         .help(control.title)
     }
 }
