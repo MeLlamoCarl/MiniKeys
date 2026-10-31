@@ -65,6 +65,19 @@ permissions after every build.
 
 See [PROTOCOL.md](PROTOCOL.md).
 
+## Credits
+
+- The keypad's programming protocol was worked out from the vendor's Windows tool and verified on
+  the device; [ch57x-keyboard-tool](https://github.com/kriomant/ch57x-keyboard-tool) by kriomant
+  (MIT) was a useful reference for the light commands of this keypad family.
+- The optional firmware builds on Stefan Wagner's [CH55x libraries](https://github.com/wagiminator)
+  and biemster's [RGB Macropad Custom Firmware](https://hackaday.io/project/189914); see
+  [MiniKeys-Firmware](https://github.com/MeLlamoCarl/MiniKeys-Firmware) for its credits.
+
+## License
+
+[MIT](LICENSE).
+
 ---
 
 Built with the help of AI tools.
