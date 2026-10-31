@@ -23,7 +23,7 @@ Obtenido de la herramienta de Windows del fabricante y verificado en un teclado 
 
 | Comando | Bytes |
 |---|---|
-| Seleccionar capa | `A1 L` |
+| Seleccionar capa | `A1 L` (no activa la capa por sí solo; ver abajo) |
 | Guardar teclas | `AA AA` |
 | Guardar luz | `AA A1` |
 
@@ -57,3 +57,9 @@ Modificadores: `01` Ctrl, `02` Shift, `04` Alt/Opción, `08` Win/Comando (`10`�
 - Probados sin efecto: modos 3–6, color en la mitad alta del byte (`0x12`, `0x42`, como el 8840),
   byte de color extra y el formato `FE B0 …` / `FD FE FF` del 8840: este firmware no tiene colores
   ni más efectos.
+
+## Capas
+
+`A1 L` solo dice a qué capa van los comandos siguientes. Ni `A1 L` ni `A1 L` + `AA AA` cambian la
+capa activa: el teclado pasa a la capa `L` cuando se escribe una tecla de esa capa. Para activar
+una capa, MiniKeys reescribe sus teclas.

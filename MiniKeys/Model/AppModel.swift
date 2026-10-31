@@ -130,7 +130,7 @@ final class AppModel: ObservableObject {
         guard (0..<Self.layerCount).contains(layer) else { return }
         activeLayer = layer
         defaults.set(layer, forKey: Keys.activeLayer)
-        write([KeypadProtocol.selectLayer(layer + 1)], success: "Capa \(layer + 1) activa")
+        write(KeypadProtocol.activateLayer(layer + 1, config: layers[layer]), success: "Capa \(layer + 1) activa")
     }
 
     // MARK: - Live light

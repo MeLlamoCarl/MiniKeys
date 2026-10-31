@@ -12,6 +12,15 @@ enum KeypadProtocol {
         [0xA1, UInt8(clamping: layer)]
     }
 
+    /// Makes a layer the active one. `A1` (even followed by a bare save) isn't enough: the keypad
+    /// switches when a key binding of that layer is written, so its bindings are written again.
+    static func activateLayer(_ layer: Int, config: LayerConfig) -> [[UInt8]] {
+        let packets = Control.allCases.flatMap { control in
+            config[control].map { bind($0, to: control, layer: layer) } ?? []
+        }
+        return packets.isEmpty ? [selectLayer(layer), commitKeys] : packets
+    }
+
     static func bind(_ action: Action, to control: Control, layer: Int) -> [[UInt8]] {
         let key = UInt8(control.rawValue)
         let layerBits = UInt8(clamping: layer) << 4
