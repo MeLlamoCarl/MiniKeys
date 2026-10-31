@@ -97,7 +97,8 @@ struct KeypadStage: View {
         }
     }
 
-    /// Mirrors the MiniKeys firmware's effects (minikeys.c renderLights), at its 20 ms frame rate.
+    /// Mirrors the MiniKeys firmware's effects (minikeys.c renderLights, firmware 2): breathing 6 s
+    /// to 1.2 s, rainbow 20 s to 2 s per turn, wave 400 ms to 100 ms per key, for speed 1...10.
     private func firmwareLight(under control: Control, at date: Date) -> (color: Color, intensity: Double) {
         let settings = model.lightSettings
         if model.liveLightOn == false { return (.clear, 0) }
@@ -113,13 +114,16 @@ struct KeypadStage: View {
         case .layer:
             return (settings.layerColors[model.activeLayer].color, brightness)
         case .breathe:
-            let phase = (frame * Double(settings.speed)).truncatingRemainder(dividingBy: 256) / 256
-            return (color, brightness * (phase < 0.5 ? phase * 2 : (1 - phase) * 2))
+            let period = 6 - Double(settings.speed - 1) * 4.8 / 9
+            let phase = (date.timeIntervalSinceReferenceDate / period).truncatingRemainder(dividingBy: 1)
+            return (color, brightness * max(12.0 / 255, phase < 0.5 ? phase * 2 : (1 - phase) * 2))
         case .rainbow:
-            let hue = (frame * Double(settings.speed) + Double(index) * 40).truncatingRemainder(dividingBy: 256) / 256
+            let period = 20 - Double(settings.speed - 1) * 2
+            let hue = (date.timeIntervalSinceReferenceDate / period + Double(index) * 0.25)
+                .truncatingRemainder(dividingBy: 1)
             return (Color(hue: hue, saturation: 1, brightness: 1), brightness)
         case .wave:
-            let step = Double(16 - settings.speed)
+            let step = (20 - Double(settings.speed - 1) * 15 / 9).rounded()
             let position = Int(frame / step)
             guard position % 6 == index else { return (.clear, 0) }
             let waveColor = settings.multicolor ? Self.waveColors[(position / 6) % 3] : color
