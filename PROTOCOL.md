@@ -41,7 +41,7 @@ Modifiers: `01` Ctrl, `02` Shift, `04` Alt/Option, `08` Win/Command (`10`–`80`
 
 **Media** (type 2): `A1 L`, `K (L<<4|2) lo hi`, `AA AA` — 16-bit Consumer usage
 (`CD` play/pause, `B5` next, `B6` previous, `E9` volume up, `EA` volume down, `E2` mute,
-`6F`/`70` brightness up/down).
+`6F`/`70` brightness up/down, `CF` voice command → macOS Dictation).
 
 **Mouse** (type 3): `A1 L`, `K (L<<4|3) buttons x y wheel modifiers`, `AA AA`
 (buttons `01` left, `02` right, `04` middle; wheel `01` up, `FF` down).

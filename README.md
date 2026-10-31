@@ -8,13 +8,15 @@ as "MINI KeyBoard"). It replaces the vendor's Windows tool.
 - **On-screen keypad**: shows the 3 keys and the knob with what each one does, the RGB light as
   the keypad shows it, and live presses (the knob turns on screen).
 - **Assign actions**: keyboard shortcuts (record them directly, or pick keys like F13–F24),
-  sequences of up to 5 keys, media keys (play, volume, brightness…) and mouse (clicks and scroll).
+  sequences of up to 5 keys, media keys (play, volume, brightness, dictation…) and mouse (clicks
+  and scroll).
 - **Saved instantly** to the keypad's memory: it works on any computer, without the app.
 - **3 layers**, switchable from the toolbar, the Keypad menu (⌘1–⌘3) or the menu bar.
 - **Light**: off, on press (the pressed key lights up, in a new color each time) or color wave (a
   light runs over the keys in red, blue and green), with a faithful on-screen preview. Option to
   turn it off while the Mac is locked.
-- **Presets**: Games, Media, Copy & Paste, Browse.
+- **Presets**: AI (accept, reject, dictation; the knob picks options), Games, Media, Copy & Paste,
+  Browse.
 
 No drivers or special permissions: the app talks to the keypad's programming interface directly
 over USB.

@@ -81,6 +81,8 @@ enum MediaKey: UInt16, CaseIterable, Codable {
     case mute = 0xE2
     case brightnessDown = 0x70
     case brightnessUp = 0x6F
+    /// "Voice Command": macOS starts Dictation (verified on the keypad).
+    case dictation = 0xCF
 
     var title: String {
         switch self {
@@ -92,6 +94,7 @@ enum MediaKey: UInt16, CaseIterable, Codable {
         case .mute: "Mute"
         case .brightnessDown: "Brightness Down"
         case .brightnessUp: "Brightness Up"
+        case .dictation: "Dictation"
         }
     }
 
@@ -105,6 +108,7 @@ enum MediaKey: UInt16, CaseIterable, Codable {
         case .mute: "speaker.slash.fill"
         case .brightnessDown: "sun.min.fill"
         case .brightnessUp: "sun.max.fill"
+        case .dictation: "mic.fill"
         }
     }
 }

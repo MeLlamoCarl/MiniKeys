@@ -15,6 +15,17 @@ private func key(_ usage: UInt8, _ modifiers: Modifiers = []) -> Action {
 enum Presets {
     static let all: [Preset] = [
         Preset(
+            id: "ai", title: "AI", subtitle: "Accept ↩ · Reject Esc · Voice, knob = ↑ ↓ and Tab",
+            symbol: "sparkles",
+            // Return accepts (send, approve a permission prompt), Esc rejects or interrupts, and
+            // Dictation talks to the AI. The knob moves through options and earlier prompts; its
+            // press is Tab, which accepts code suggestions and completions.
+            config: [
+                .key1: key(0x28), .key2: key(0x29), .key3: .media(.dictation),
+                .knobLeft: key(0x52), .knobPress: key(0x2B), .knobRight: key(0x51)
+            ]
+        ),
+        Preset(
             id: "games", title: "Games", subtitle: "Z · X · C, knob ← → and Space",
             symbol: "gamecontroller.fill",
             config: [
