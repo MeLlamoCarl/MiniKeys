@@ -97,14 +97,21 @@ struct KeypadStage: View {
         }
     }
 
-    /// Mirrors the MiniKeys firmware's effects (minikeys.c renderLights, firmware 2): breathing 6 s
-    /// to 1.2 s, rainbow 20 s to 2 s per turn, wave 400 ms to 100 ms per key, for speed 1...10.
+    // Per speed 1...10 (ms), as in minikeys.c: breath length, rainbow turn, wave time per key.
+    private static let breathePeriod = [6000, 5467, 4933, 4400, 3867, 3333, 2800, 2267, 1733, 1200]
+    private static let rainbowPeriod = [20000, 18000, 16000, 14000, 12000, 10000, 8000, 6000, 4000, 2000]
+    private static let firmwareWaveStep = [400, 360, 340, 300, 260, 240, 200, 160, 140, 100]
+
+    /// Mirrors the MiniKeys firmware's effects (minikeys.c renderLights) with the same integer math,
+    /// timed from the moment both last restarted the effect.
     private func firmwareLight(under control: Control, at date: Date) -> (color: Color, intensity: Double) {
         let settings = model.lightSettings
         if model.liveLightOn == false { return (.clear, 0) }
         let brightness = 0.25 + 0.75 * Double(settings.brightness) / 255
-        let frame = date.timeIntervalSinceReferenceDate / 0.02
         let index = control.rawValue - 1
+        let elapsed = max(0, Int(date.timeIntervalSince(model.lightEpoch) * 1000) / 20 * 20)  // 20 ms frames
+        let speedIndex = min(max(settings.speed, 1), 10) - 1
+        func phase(_ period: Int) -> Int { elapsed % period * 256 / period }
         let color = settings.color.color
         switch settings.effect {
         case .off:
@@ -114,17 +121,14 @@ struct KeypadStage: View {
         case .layer:
             return (settings.layerColors[model.activeLayer].color, brightness)
         case .breathe:
-            let period = 6 - Double(settings.speed - 1) * 4.8 / 9
-            let phase = (date.timeIntervalSinceReferenceDate / period).truncatingRemainder(dividingBy: 1)
-            return (color, brightness * max(12.0 / 255, phase < 0.5 ? phase * 2 : (1 - phase) * 2))
+            let p = phase(Self.breathePeriod[speedIndex])
+            let level = max(12, p < 128 ? p * 2 : (255 - p) * 2)
+            return (color, brightness * Double(level) / 255)
         case .rainbow:
-            let period = 20 - Double(settings.speed - 1) * 2
-            let hue = (date.timeIntervalSinceReferenceDate / period + Double(index) * 0.25)
-                .truncatingRemainder(dividingBy: 1)
-            return (Color(hue: hue, saturation: 1, brightness: 1), brightness)
+            let hue = (phase(Self.rainbowPeriod[speedIndex]) + index * 64) % 256
+            return (Color(hue: Double(hue) / 256, saturation: 1, brightness: 1), brightness)
         case .wave:
-            let step = (20 - Double(settings.speed - 1) * 15 / 9).rounded()
-            let position = Int(frame / step)
+            let position = elapsed / Self.firmwareWaveStep[speedIndex]
             guard position % 6 == index else { return (.clear, 0) }
             let waveColor = settings.multicolor ? Self.waveColors[(position / 6) % 3] : color
             return (waveColor, brightness)

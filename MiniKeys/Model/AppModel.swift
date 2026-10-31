@@ -53,6 +53,9 @@ final class AppModel: ObservableObject {
     }
 
     private var lightSendPending = false
+    private var clockSyncWork: DispatchWorkItem?
+    /// When the keypad's light effect last restarted; the preview animates from the same moment.
+    private(set) var lightEpoch = Date()
     private var lightSaveWork: DispatchWorkItem?
 
     init() {
@@ -169,6 +172,20 @@ final class AppModel: ObservableObject {
         packets += KeypadProtocol.light(lightSettings) + [KeypadProtocol.saveLight]
         packets += KeypadProtocol.selectLayerOnly(activeLayer + 1)
         write(packets, success: "Keypad synced with MiniKeys")
+        scheduleLightClockSync()
+    }
+
+    /// Restarts the effect on the keypad and in the preview at the same moment. It runs a moment
+    /// after the last light change, once the keypad has applied (and saved) it.
+    private func scheduleLightClockSync() {
+        clockSyncWork?.cancel()
+        let work = DispatchWorkItem { [weak self] in
+            self?.device.send([KeypadProtocol.syncLightClock]) { result in
+                if case .success = result { self?.lightEpoch = Date() }
+            }
+        }
+        clockSyncWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4, execute: work)
     }
 
     // MARK: - MiniKeys firmware light
@@ -186,6 +203,7 @@ final class AppModel: ObservableObject {
                 guard let self else { return }
                 lightSendPending = false
                 device.send(KeypadProtocol.light(lightSettings))
+                scheduleLightClockSync()
             }
         }
         // Saving writes the keypad's flash, so wait until the edits stop.
@@ -193,6 +211,7 @@ final class AppModel: ObservableObject {
         let work = DispatchWorkItem { [weak self] in
             guard let self else { return }
             write(KeypadProtocol.light(lightSettings) + [KeypadProtocol.saveLight], success: "Light saved on the keypad")
+            scheduleLightClockSync()
         }
         lightSaveWork = work
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.2, execute: work)

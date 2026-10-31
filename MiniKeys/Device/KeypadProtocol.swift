@@ -75,6 +75,9 @@ enum KeypadProtocol {
 
     static let clearKeyColors: [UInt8] = [0xB2, 0xFF]
 
+    /// Restarts the light effect now (firmware 3+), to line it up with MiniKeys' preview.
+    static let syncLightClock: [UInt8] = [0xB4]
+
     /// Firmware layers switch with `A1` alone, without writing the flash.
     static func selectLayerOnly(_ layer: Int) -> [[UInt8]] {
         [selectLayer(layer)]
