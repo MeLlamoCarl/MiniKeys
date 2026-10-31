@@ -34,7 +34,13 @@ make flash    # upload; the keypad must be in bootloader mode
 Bootloader mode:
 - **First time** (stock firmware): open the keypad and connect pin 3 (P1.5) of the CH552G to
   GND (pin 9) while plugging in USB.
-- **Afterwards**: hold key 1 while plugging in (the LEDs turn white), or send `BB 4D 4B`.
+  On some chips (bootloader v2.4+) that doesn't work: connect pin 12 (P3.6, D+) to pin 11
+  (V33, 3.3 V) instead, ideally through a 10 kΩ resistor, and release right after plugging in.
+  Don't touch pin 10 (5 V). In bootloader mode the LEDs stay off.
+- **Afterwards**: hold key 1 while plugging in (the LEDs turn white), or send `BB 4D 4B` — no need
+  to open the keypad.
+
+`make DIAG=1 bin` builds a pin finder: every free pin pulled low types its name (e.g. `p16`).
 
 The stock firmware can't be read back, so it can't be restored; its data flash (key bindings) can
 be saved with `wchisp eeprom dump`.

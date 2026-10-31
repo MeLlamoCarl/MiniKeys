@@ -15,6 +15,9 @@ as "MINI KeyBoard"). It replaces the vendor's Windows tool.
 - **Light**: off, on press (the pressed key lights up, in a new color each time) or color wave (a
   light runs over the keys in red, blue and green), with a faithful on-screen preview. Option to
   turn it off while the Mac is locked.
+- **Optional MiniKeys firmware** ([Firmware/](Firmware/)): any light effect (solid, breathing,
+  rainbow, wave, on press, layer color) with your own colors, speed and brightness, instant layer
+  switching, and updates over USB. MiniKeys detects it and syncs the keypad on connect.
 - **Presets**: AI (accept, reject, dictation; the knob picks options), Games, Media, Copy & Paste,
   Browse.
 

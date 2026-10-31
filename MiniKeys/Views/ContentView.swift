@@ -70,21 +70,10 @@ private struct LightPanel: View {
                 Label("Light", systemImage: "rainbow")
                     .font(.headline)
 
-                VStack(alignment: .leading, spacing: 6) {
-                    Picker("Light", selection: Binding(
-                        get: { model.ledMode },
-                        set: { if let mode = $0 { model.setLEDMode(mode) } }
-                    )) {
-                        ForEach(LEDMode.allCases, id: \.self) { mode in
-                            Label(mode.title, systemImage: mode.symbol).tag(Optional(mode))
-                        }
-                    }
-                    .pickerStyle(.radioGroup)
-                    .labelsHidden()
-                    Text("Saved on the keypad. Colors and animations are built in: Color Wave runs over the keys in red, blue and green; On Press lights the key you press.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
+                if model.device.hasMiniKeysFirmware {
+                    FirmwareLightControls()
+                } else {
+                    stockControls
                 }
 
                 Divider()
@@ -92,6 +81,110 @@ private struct LightPanel: View {
                 Toggle("Turn off while the Mac is locked", isOn: $model.dimsWhenLocked)
                     .help("Turns the light off while the Mac is locked or its display is asleep, and back on when you return. Not saved on the keypad.")
             }
+        }
+    }
+
+    private var stockControls: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Picker("Light", selection: Binding(
+                get: { model.ledMode },
+                set: { if let mode = $0 { model.setLEDMode(mode) } }
+            )) {
+                ForEach(LEDMode.allCases, id: \.self) { mode in
+                    Label(mode.title, systemImage: mode.symbol).tag(Optional(mode))
+                }
+            }
+            .pickerStyle(.radioGroup)
+            .labelsHidden()
+            Text("Saved on the keypad. Colors and animations are built in: Color Wave runs over the keys in red, blue and green; On Press lights the key you press.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+}
+
+/// Light settings of the MiniKeys firmware: any effect, color, speed and brightness.
+private struct FirmwareLightControls: View {
+    @EnvironmentObject private var model: AppModel
+
+    private var settings: LightSettings { model.lightSettings }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Picker("Effect", selection: Binding(
+                get: { settings.effect },
+                set: { effect in model.updateLight { $0.effect = effect } }
+            )) {
+                ForEach(FirmwareEffect.allCases, id: \.self) { effect in
+                    Label(effect.title, systemImage: effect.symbol).tag(effect)
+                }
+            }
+
+            if settings.effect.canCycleColors {
+                Toggle("Cycle colors", isOn: Binding(
+                    get: { settings.multicolor },
+                    set: { value in model.updateLight { $0.multicolor = value } }
+                ))
+            }
+
+            if settings.effect.usesColor {
+                ColorPicker("Color", selection: Binding(
+                    get: { settings.color.color },
+                    set: { color in model.updateLight { $0.color = RGB(color) } }
+                ), supportsOpacity: false)
+                .disabled(settings.effect.canCycleColors && settings.multicolor)
+            }
+
+            if settings.effect.usesSpeed {
+                LabeledSlider(title: "Speed", value: Binding(
+                    get: { Double(settings.speed) },
+                    set: { value in model.updateLight { $0.speed = Int(value.rounded()) } }
+                ), range: 1...10)
+            }
+
+            LabeledSlider(title: "Brightness", value: Binding(
+                get: { Double(settings.brightness) },
+                set: { value in model.updateLight { $0.brightness = Int(value.rounded()) } }
+            ), range: 10...255)
+
+            HStack(spacing: 8) {
+                Text("Layers")
+                Spacer()
+                ForEach(0..<AppModel.layerCount, id: \.self) { layer in
+                    ColorPicker("Layer \(layer + 1)", selection: Binding(
+                        get: { settings.layerColors[layer].color },
+                        set: { color in model.updateLight { $0.layerColors[layer] = RGB(color) } }
+                    ), supportsOpacity: false)
+                    .labelsHidden()
+                    .help("Layer \(layer + 1)")
+                }
+            }
+
+            Toggle("Blink layer number on switch", isOn: Binding(
+                get: { settings.flashesLayer },
+                set: { value in model.updateLight { $0.flashesLayer = value } }
+            ))
+            .help("The keypad blinks once per layer number, in the layer's color")
+
+            Text("MiniKeys firmware: changes show right away and are saved on the keypad.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+}
+
+private struct LabeledSlider: View {
+    let title: String
+    @Binding var value: Double
+    let range: ClosedRange<Double>
+
+    var body: some View {
+        HStack {
+            Text(title)
+                .frame(width: 76, alignment: .leading)
+            Slider(value: $value, in: range)
         }
     }
 }

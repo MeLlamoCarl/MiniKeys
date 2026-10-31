@@ -70,6 +70,9 @@ struct KeypadStage: View {
     private static let pressColors = [red, green, purple, blue]
 
     private func light(under control: Control, at date: Date) -> (color: Color, intensity: Double) {
+        if model.device.hasMiniKeysFirmware {
+            return firmwareLight(under: control, at: date)
+        }
         let mode: LEDMode?
         if let isOn = model.liveLightOn {
             mode = isOn ? .on : .off
@@ -91,6 +94,42 @@ struct KeypadStage: View {
             let intensity = max(0, 1 - abs(phase - center) / (Self.waveStep * 0.85))
             // Unknown saved mode: show the wave faintly.
             return (Self.waveColors[cycle % Self.waveColors.count], mode == nil ? intensity * 0.4 : intensity)
+        }
+    }
+
+    /// Mirrors the MiniKeys firmware's effects (minikeys.c renderLights), at its 20 ms frame rate.
+    private func firmwareLight(under control: Control, at date: Date) -> (color: Color, intensity: Double) {
+        let settings = model.lightSettings
+        if model.liveLightOn == false { return (.clear, 0) }
+        let brightness = 0.25 + 0.75 * Double(settings.brightness) / 255
+        let frame = date.timeIntervalSinceReferenceDate / 0.02
+        let index = control.rawValue - 1
+        let color = settings.color.color
+        switch settings.effect {
+        case .off:
+            return (.clear, 0)
+        case .solid:
+            return (color, brightness)
+        case .layer:
+            return (settings.layerColors[model.activeLayer].color, brightness)
+        case .breathe:
+            let phase = (frame * Double(settings.speed)).truncatingRemainder(dividingBy: 256) / 256
+            return (color, brightness * (phase < 0.5 ? phase * 2 : (1 - phase) * 2))
+        case .rainbow:
+            let hue = (frame * Double(settings.speed) + Double(index) * 40).truncatingRemainder(dividingBy: 256) / 256
+            return (Color(hue: hue, saturation: 1, brightness: 1), brightness)
+        case .wave:
+            let step = Double(16 - settings.speed)
+            let position = Int(frame / step)
+            guard position % 6 == index else { return (.clear, 0) }
+            let waveColor = settings.multicolor ? Self.waveColors[(position / 6) % 3] : color
+            return (waveColor, brightness)
+        case .press:
+            guard let flash = model.lastFlash, flash.key == control else { return (.clear, 0) }
+            let decayPerFrame = Double(4 + settings.speed * 3) / 255
+            let level = max(0, 1 - date.timeIntervalSince(flash.date) / 0.02 * decayPerFrame)
+            let pressColor = settings.multicolor ? Self.pressColors[flash.count % Self.pressColors.count] : color
+            return (pressColor, level * brightness)
         }
     }
 

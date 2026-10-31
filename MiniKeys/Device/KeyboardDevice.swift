@@ -25,6 +25,8 @@ final class KeyboardDevice: ObservableObject {
     }
 
     @Published private(set) var isConnected = false
+    /// The keypad runs the MiniKeys firmware (bcdDevice 0x20xx) instead of the stock one.
+    @Published private(set) var hasMiniKeysFirmware = false
 
     private var notifyPort: IONotificationPortRef?
     private var iterators: [io_iterator_t] = []
@@ -88,6 +90,7 @@ final class KeyboardDevice: ObservableObject {
     private func refresh() {
         let service = Self.findInterface()
         isConnected = service != 0
+        hasMiniKeysFirmware = isConnected && Self.firmwareVersion() >> 8 == 0x20
         if service != 0 {
             IOObjectRelease(service)
         } else {
@@ -96,6 +99,17 @@ final class KeyboardDevice: ObservableObject {
     }
 
     // MARK: - Writing
+
+    private static func firmwareVersion() -> Int {
+        let matching = IOServiceMatching("IOUSBHostDevice") as NSMutableDictionary
+        matching["idVendor"] = vendorID
+        matching["idProduct"] = productID
+        let service = IOServiceGetMatchingService(kIOMainPortDefault, matching)
+        guard service != 0 else { return 0 }
+        defer { IOObjectRelease(service) }
+        return IORegistryEntryCreateCFProperty(service, "bcdDevice" as CFString, kCFAllocatorDefault, 0)?
+            .takeRetainedValue() as? Int ?? 0
+    }
 
     private static func findInterface() -> io_service_t {
         var iterator: io_iterator_t = 0

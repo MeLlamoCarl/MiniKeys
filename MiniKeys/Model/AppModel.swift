@@ -22,6 +22,8 @@ final class AppModel: ObservableObject {
     @Published private(set) var layers: [LayerConfig]
     @Published private(set) var activeLayer: Int
     @Published private(set) var ledMode: LEDMode?
+    /// Light settings for the MiniKeys firmware.
+    @Published private(set) var lightSettings: LightSettings
     /// Turns the light off while the Mac is locked or its display sleeps, and back on afterwards.
     @Published var dimsWhenLocked: Bool {
         didSet { defaults.set(dimsWhenLocked, forKey: Keys.dimsWhenLocked) }
@@ -47,7 +49,11 @@ final class AppModel: ObservableObject {
         static let activeLayer = "activeLayer"
         static let ledMode = "ledMode"
         static let dimsWhenLocked = "dimsWhenLocked"
+        static let lightSettings = "lightSettings"
     }
+
+    private var lightSendPending = false
+    private var lightSaveWork: DispatchWorkItem?
 
     init() {
         if let data = defaults.data(forKey: Keys.layers),
@@ -60,11 +66,21 @@ final class AppModel: ObservableObject {
         activeLayer = min(max(defaults.integer(forKey: Keys.activeLayer), 0), Self.layerCount - 1)
         ledMode = defaults.object(forKey: Keys.ledMode) == nil ? nil : LEDMode(rawValue: defaults.integer(forKey: Keys.ledMode))
         dimsWhenLocked = defaults.object(forKey: Keys.dimsWhenLocked) as? Bool ?? true
+        lightSettings = defaults.data(forKey: Keys.lightSettings)
+            .flatMap { try? JSONDecoder().decode(LightSettings.self, from: $0) } ?? LightSettings()
 
         device.objectWillChange.sink { [weak self] in self?.objectWillChange.send() }.store(in: &cancellables)
         input.objectWillChange.sink { [weak self] in self?.objectWillChange.send() }.store(in: &cancellables)
         input.onEvent = { [weak self] in self?.handle($0) }
         input.start()
+
+        // The MiniKeys firmware only writes flash bytes that change, so syncing on every connection
+        // is cheap and keeps the keypad matching the app.
+        device.$hasMiniKeysFirmware
+            .removeDuplicates()
+            .filter { $0 }
+            .sink { [weak self] _ in self?.syncFirmware() }
+            .store(in: &cancellables)
 
         let distributed = DistributedNotificationCenter.default()
         let workspace = NSWorkspace.shared.notificationCenter
@@ -130,7 +146,56 @@ final class AppModel: ObservableObject {
         guard (0..<Self.layerCount).contains(layer) else { return }
         activeLayer = layer
         defaults.set(layer, forKey: Keys.activeLayer)
-        write(KeypadProtocol.activateLayer(layer + 1, config: layers[layer]), success: "Layer \(layer + 1) active")
+        let packets = device.hasMiniKeysFirmware
+            ? KeypadProtocol.selectLayerOnly(layer + 1)
+            : KeypadProtocol.activateLayer(layer + 1, config: layers[layer])
+        write(packets, success: "Layer \(layer + 1) active")
+    }
+
+    // MARK: - MiniKeys firmware
+
+    /// Writes every layer's keys and the light settings, then selects the active layer.
+    private func syncFirmware() {
+        var quiet = lightSettings
+        quiet.flashesLayer = false                // no layer blinks while each layer is written
+        var packets = KeypadProtocol.light(quiet)
+        for layer in 0..<Self.layerCount {
+            for control in Control.allCases {
+                if let action = layers[layer][control] {
+                    packets += KeypadProtocol.bind(action, to: control, layer: layer + 1)
+                }
+            }
+        }
+        packets += KeypadProtocol.light(lightSettings) + [KeypadProtocol.saveLight]
+        packets += KeypadProtocol.selectLayerOnly(activeLayer + 1)
+        write(packets, success: "Keypad synced with MiniKeys")
+    }
+
+    // MARK: - MiniKeys firmware light
+
+    /// Shows the change on the keypad right away and saves it once the edits settle.
+    func updateLight(_ change: (inout LightSettings) -> Void) {
+        change(&lightSettings)
+        if let data = try? JSONEncoder().encode(lightSettings) {
+            defaults.set(data, forKey: Keys.lightSettings)
+        }
+        // Sliders change many times per second: send at most one update per 50 ms.
+        if !lightSendPending {
+            lightSendPending = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
+                guard let self else { return }
+                lightSendPending = false
+                device.send(KeypadProtocol.light(lightSettings))
+            }
+        }
+        // Saving writes the keypad's flash, so wait until the edits stop.
+        lightSaveWork?.cancel()
+        let work = DispatchWorkItem { [weak self] in
+            guard let self else { return }
+            write(KeypadProtocol.light(lightSettings) + [KeypadProtocol.saveLight], success: "Light saved on the keypad")
+        }
+        lightSaveWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2, execute: work)
     }
 
     // MARK: - Live light
@@ -138,20 +203,33 @@ final class AppModel: ObservableObject {
     /// Changes the light without saving it, so the keypad's memory isn't worn and the saved mode
     /// comes back on its own when it is plugged in again.
     private func macWentAway() {
-        guard dimsWhenLocked, ledMode != .off, device.isConnected else { return }
-        liveLightOn = false
-        device.send([KeypadProtocol.previewLED(.off, layer: activeLayer + 1)])
+        guard dimsWhenLocked, device.isConnected else { return }
+        if device.hasMiniKeysFirmware {
+            guard lightSettings.effect != .off else { return }
+            liveLightOn = false
+            device.send([KeypadProtocol.keyColor(0, RGB(r: 0, g: 0, b: 0))])
+        } else {
+            guard ledMode != .off else { return }
+            liveLightOn = false
+            device.send([KeypadProtocol.previewLED(.off, layer: activeLayer + 1)])
+        }
+    }
+
+    private var restoreLightPacket: [UInt8] {
+        device.hasMiniKeysFirmware
+            ? KeypadProtocol.clearKeyColors
+            : KeypadProtocol.previewLED(ledMode ?? .on, layer: activeLayer + 1)
     }
 
     private func restoreLight() {
         guard liveLightOn != nil else { return }
         liveLightOn = nil
-        device.send([KeypadProtocol.previewLED(ledMode ?? .on, layer: activeLayer + 1)])
+        device.send([restoreLightPacket])
     }
 
     private func restoreLightBeforeQuitting() {
         guard liveLightOn != nil else { return }
-        device.sendAndWait([KeypadProtocol.previewLED(ledMode ?? .on, layer: activeLayer + 1)])
+        device.sendAndWait([restoreLightPacket])
     }
 
     private func save() {

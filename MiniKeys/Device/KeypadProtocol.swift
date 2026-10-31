@@ -51,6 +51,35 @@ enum KeypadProtocol {
         [ledTarget, UInt8(clamping: layer) << 4 | 0x08, UInt8(mode.rawValue)]
     }
 
+    // MARK: MiniKeys firmware
+
+    /// Applies light settings right away; `saveLight` stores them.
+    static func light(_ settings: LightSettings) -> [[UInt8]] {
+        let flags: UInt8 = (settings.multicolor ? 0x01 : 0) | (settings.flashesLayer ? 0x02 : 0)
+        var packets: [[UInt8]] = [[
+            0xB1, settings.effect.rawValue, settings.color.r, settings.color.g, settings.color.b,
+            UInt8(clamping: settings.speed), UInt8(clamping: settings.brightness), flags
+        ]]
+        for (index, color) in settings.layerColors.prefix(3).enumerated() {
+            packets.append([0xB3, UInt8(index + 1), color.r, color.g, color.b])
+        }
+        return packets
+    }
+
+    static let saveLight: [UInt8] = commitLED
+
+    /// Live color for one key (1...3) or all keys (0), over the effect; not saved.
+    static func keyColor(_ key: UInt8, _ color: RGB) -> [UInt8] {
+        [0xB2, key, color.r, color.g, color.b]
+    }
+
+    static let clearKeyColors: [UInt8] = [0xB2, 0xFF]
+
+    /// Firmware layers switch with `A1` alone, without writing the flash.
+    static func selectLayerOnly(_ layer: Int) -> [[UInt8]] {
+        [selectLayer(layer)]
+    }
+
     static func setLED(_ mode: LEDMode, layer: Int) -> [[UInt8]] {
         let layerBits = UInt8(clamping: layer) << 4
         return [selectLayer(layer), [ledTarget, layerBits | 0x08, UInt8(mode.rawValue)], commitLED]

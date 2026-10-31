@@ -23,6 +23,11 @@ WCHISP    ?= wchisp
 CFLAGS  = -mmcs51 --model-small --no-xinit-opt --disable-warning 356 --disable-warning 357
 CFLAGS += --xram-size $(XRAM_SIZE) --xram-loc $(XRAM_LOC) --code-size $(CODE_SIZE)
 CFLAGS += -I$(INCLUDE) -DF_CPU=$(FREQ_SYS)
+ifdef DIAG
+CFLAGS += -DDIAG
+TARGET  = minikeys-diag
+BUILD   = build-diag
+endif
 CFILES  = $(SKETCH) $(wildcard $(INCLUDE)/*.c)
 RFILES  = $(addprefix $(BUILD)/,$(notdir $(CFILES:.c=.rel)))
 

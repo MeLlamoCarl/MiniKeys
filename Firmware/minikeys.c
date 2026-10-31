@@ -514,8 +514,8 @@ void pollEncoder(void) {
   encoderState = state;
   // Report a detent when the encoder rests again (both contacts open).
   if(state == 3) {
-    if(encoderSteps >= 2) { controlDown(CTRL_KNOB_RIGHT); controlUp(CTRL_KNOB_RIGHT); flashPress(2); }
-    else if(encoderSteps <= -2) { controlDown(CTRL_KNOB_LEFT); controlUp(CTRL_KNOB_LEFT); flashPress(2); }
+    if(encoderSteps <= -2) { controlDown(CTRL_KNOB_RIGHT); controlUp(CTRL_KNOB_RIGHT); flashPress(2); }
+    else if(encoderSteps >= 2) { controlDown(CTRL_KNOB_LEFT); controlUp(CTRL_KNOB_LEFT); flashPress(2); }
     encoderSteps = 0;
   }
 }
@@ -546,6 +546,58 @@ void pollButtons(void) {
   }
 }
 
+
+// ===================================================================================
+// Pin finder (make DIAG=1): types the name of every free pin that gets pulled low
+// ===================================================================================
+#ifdef DIAG
+__code uint8_t diagPins[] = {P10, P11, P12, P13, P14, P15, P16, P17, P30, P31, P32, P33, P35};
+__code uint8_t diagNames[][2] = {{1,0},{1,1},{1,2},{1,3},{1,4},{1,5},{1,6},{1,7},
+                                 {3,0},{3,1},{3,2},{3,3},{3,5}};
+__xdata uint8_t diagLast[sizeof(diagPins)];
+
+uint8_t diagRead(uint8_t pin) {
+  switch(pin) {
+    case P10: return PIN_read(P10); case P11: return PIN_read(P11);
+    case P12: return PIN_read(P12); case P13: return PIN_read(P13);
+    case P14: return PIN_read(P14); case P15: return PIN_read(P15);
+    case P16: return PIN_read(P16); case P17: return PIN_read(P17);
+    case P30: return PIN_read(P30); case P31: return PIN_read(P31);
+    case P32: return PIN_read(P32); case P33: return PIN_read(P33);
+    default:  return PIN_read(P35);
+  }
+}
+
+void diagType(uint8_t usage) {
+  sendKeys(0, usage);
+  sendKeys(0, 0);
+}
+
+void diagLoop(void) {
+  uint8_t i, now;
+  P1_MOD_OC = 0xFF; P1_DIR_PU = 0xFF;             // all of port 1: input with pull-up
+  P3_MOD_OC |= 0x2F; P3_DIR_PU |= 0x2F;           // P3.0-3.3, P3.5 (not USB, not LEDs)
+  DLY_ms(20);
+  for(i=0; i<sizeof(diagPins); i++) diagLast[i] = diagRead(diagPins[i]);
+  while(1) {
+    for(i=0; i<sizeof(diagPins); i++) {
+      now = diagRead(diagPins[i]);
+      if(now != diagLast[i]) {
+        diagLast[i] = now;
+        if(!now) {                                // pulled low: type "p" port pin space
+          diagType(0x13);
+          diagType(0x1D + diagNames[i][0]);       // '1' = 0x1E
+          diagType(diagNames[i][1] ? 0x1D + diagNames[i][1] : 0x27);
+          diagType(0x2C);
+        }
+      }
+    }
+    while(CMD_take(cmd)) handleCommand();         // keeps BB 4D 4B working
+    DLY_ms(5);
+  }
+}
+#endif
+
 // ===================================================================================
 // Main
 // ===================================================================================
@@ -574,6 +626,11 @@ void main(void) {
   loadSettings();
 
   HID_init();
+
+  #ifdef DIAG
+  DLY_ms(1500);                             // let the host finish enumerating
+  diagLoop();
+  #endif
 
   while(1) {
     for(i=0; i<4; i++) {                    // 1 ms, sampling the knob every 250 us

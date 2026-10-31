@@ -35,8 +35,14 @@ private struct KeyboardCommands: Commands {
                 .keyboardShortcut(KeyEquivalent(Character("\(layer + 1)")), modifiers: .command)
             }
             Divider()
-            Picker("Light", selection: Binding(get: { model.ledMode }, set: { if let mode = $0 { model.setLEDMode(mode) } })) {
-                ForEach(LEDMode.allCases, id: \.self) { Text($0.title).tag(Optional($0)) }
+            if model.device.hasMiniKeysFirmware {
+                Picker("Light", selection: Binding(get: { model.lightSettings.effect }, set: { effect in model.updateLight { $0.effect = effect } })) {
+                    ForEach(FirmwareEffect.allCases, id: \.self) { Text($0.title).tag($0) }
+                }
+            } else {
+                Picker("Light", selection: Binding(get: { model.ledMode }, set: { if let mode = $0 { model.setLEDMode(mode) } })) {
+                    ForEach(LEDMode.allCases, id: \.self) { Text($0.title).tag(Optional($0)) }
+                }
             }
             Divider()
             Button("Rewrite Layer on Keypad") { model.writeAll() }
@@ -56,8 +62,14 @@ private struct MenuBarContent: View {
         Picker("Layer", selection: Binding(get: { model.activeLayer }, set: { model.activateLayer($0) })) {
             ForEach(0..<AppModel.layerCount, id: \.self) { Text("Layer \($0 + 1)").tag($0) }
         }
-        Picker("Light", selection: Binding(get: { model.ledMode }, set: { if let mode = $0 { model.setLEDMode(mode) } })) {
-            ForEach(LEDMode.allCases, id: \.self) { Text($0.title).tag(Optional($0)) }
+        if model.device.hasMiniKeysFirmware {
+            Picker("Light", selection: Binding(get: { model.lightSettings.effect }, set: { effect in model.updateLight { $0.effect = effect } })) {
+                ForEach(FirmwareEffect.allCases, id: \.self) { Text($0.title).tag($0) }
+            }
+        } else {
+            Picker("Light", selection: Binding(get: { model.ledMode }, set: { if let mode = $0 { model.setLEDMode(mode) } })) {
+                ForEach(LEDMode.allCases, id: \.self) { Text($0.title).tag(Optional($0)) }
+            }
         }
         Divider()
         Button("Open MiniKeys…") {

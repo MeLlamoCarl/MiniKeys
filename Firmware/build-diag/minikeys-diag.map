@@ -1,0 +1,721 @@
+ASxxxx Linker V05.50.4-SDLD,  page 1.
+Hexadecimal  [32-Bits]
+
+Area                                    Addr        Size        Decimal Bytes (Attributes)
+--------------------------------        ----        ----        ------- ----- ------------
+CABS                                00000000    00000000 =           0. bytes (ABS,CON,CODE)
+
+         Value  Global                             Global Defined In Module
+         -----  --------------------------------   ------------------------
+C:   00000000  l_CABS                          
+C:   00000000  l_GSINIT1                       
+C:   00000000  l_GSINIT3                       
+C:   00000000  l_GSINIT5                       
+C:   00000000  l_IABS                          
+C:   00000000  l_PSEG                          
+C:   00000000  l_REG_BANK_1                    
+C:   00000000  l_REG_BANK_2                    
+C:   00000000  l_REG_BANK_3                    
+C:   00000000  l_RSEG                          
+C:   00000000  l_RSEG0                         
+C:   00000000  l_RSEG1                         
+C:   00000000  l_XABS                          
+C:   00000000  l_XINIT                         
+C:   00000000  l_XISEG                         
+C:   00000000  l__CODE                         
+C:   00000000  s_BSEG                          
+C:   00000000  s_CABS                          
+C:   00000000  s_DSEG                          
+C:   00000000  s_HOME                          
+C:   00000000  s_IABS                          
+C:   00000000  s_REG_BANK_0                    
+C:   00000000  s_RSEG                          
+C:   00000000  s_RSEG0                         
+C:   00000000  s_RSEG1                         
+C:   00000000  s_XABS                          
+C:   00000001  l_BIT_BANK                      
+C:   00000001  l_BSEG_BYTES                    
+C:   00000002  l_BSEG                          
+C:   00000003  l_GSFINAL                       
+C:   00000003  l_GSINIT0                       
+C:   00000003  l_OSEG                          
+C:   00000006  l_GSINIT4                       
+C:   00000008  l_REG_BANK_0                    
+C:   00000008  s_REG_BANK_1                    
+C:   0000000A  l_GSINIT2                       
+C:   0000000D  l_ISEG                          
+C:   00000010  s_REG_BANK_2                    
+C:   00000018  s_REG_BANK_3                    
+C:   0000001D  s_OSEG                          
+C:   00000020  s_BSEG_BYTES                    
+C:   00000020  s__CODE                         
+C:   00000021  s_BIT_BANK                      
+C:   00000028  s_ISEG                          
+C:   00000030  l_GSINIT                        
+C:   00000035  s_SSEG                          
+C:   00000080  l_DSEG                          
+C:   000000B8  l_HOME                          
+C:   000000B8  s_GSINIT0                       
+C:   000000BB  s_GSINIT1                       
+ASxxxx Linker V05.50.4-SDLD,  page 2.
+Hexadecimal  [32-Bits]
+
+Area                                    Addr        Size        Decimal Bytes (Attributes)
+--------------------------------        ----        ----        ------- ----- ------------
+CABS                                00000000    00000000 =           0. bytes (ABS,CON,CODE)
+
+         Value  Global                             Global Defined In Module
+         -----  --------------------------------   ------------------------
+C:   000000BB  s_GSINIT2                       
+C:   000000C5  s_GSINIT3                       
+C:   000000C5  s_GSINIT4                       
+C:   000000CB  l_SSEG                          
+C:   000000CB  s_GSINIT                        
+C:   000000CB  s_GSINIT5                       
+C:   000000FB  s_GSFINAL                       
+C:   000000FE  s_CSEG                          
+C:   00000100  l_IRAM                          
+C:   00000100  s_PSEG                          
+C:   00000100  s_XSEG                          
+C:   0000015C  l_CONST                         
+C:   0000019C  l_XSEG                          
+C:   0000029C  s_XISEG                         
+C:   00001A18  l_CSEG                          
+C:   00001B16  s_CONST                         
+C:   00001C72  s_XINIT                         
+
+ASxxxx Linker V05.50.4-SDLD,  page 3.
+Hexadecimal  [32-Bits]
+
+Area                                    Addr        Size        Decimal Bytes (Attributes)
+--------------------------------        ----        ----        ------- ----- ------------
+.  .ABS.                            00000000    00000000 =           0. bytes (ABS,CON)
+
+         Value  Global                             Global Defined In Module
+         -----  --------------------------------   ------------------------
+     00000000  .__.ABS.                           _startup
+     00000000  _EP0_buffer                        usb_handler
+     00000040  _EP1_buffer                        usb_handler
+     00000052  _EP2_buffer                        usb_handler
+     00000080  _ADC_CHAN0                         usb_handler
+     00000080  _ADC_CTRL                          usb_handler
+     00000081  _ADC_CHAN1                         usb_handler
+     00000081  _SP                                usb_handler
+     00000082  _DPL                               usb_handler
+     00000083  _CMP_CHAN                          usb_handler
+     00000083  _DPH                               usb_handler
+     00000084  _ADC_START                         usb_handler
+     00000084  _ROM_ADDR_L                        usb_handler
+     00000085  _ADC_IF                            usb_handler
+     00000085  _ROM_ADDR_H                        usb_handler
+     00000086  _CMP_IF                            usb_handler
+     00000086  _ROM_CTRL                          usb_handler
+     00000087  _CMPO                              usb_handler
+     00000087  _PCON                              usb_handler
+     00000088  _IT0                               usb_handler
+     00000088  _TCON                              usb_handler
+     00000089  _IE0                               usb_handler
+     00000089  _TMOD                              usb_handler
+     0000008A  _IT1                               usb_handler
+     0000008A  _TL0                               usb_handler
+     0000008B  _IE1                               usb_handler
+     0000008B  _TL1                               usb_handler
+     0000008C  _TH0                               usb_handler
+     0000008C  _TR0                               usb_handler
+     0000008D  _TF0                               usb_handler
+     0000008D  _TH1                               usb_handler
+     0000008E  _ROM_DATA_L                        usb_handler
+     0000008E  _TR1                               usb_handler
+     0000008F  _ROM_DATA_H                        usb_handler
+     0000008F  _TF1                               usb_handler
+     00000090  _CAP1                              usb_handler
+     00000090  _P1                                usb_handler
+     00000090  _PP10                              neo
+     00000090  _T2                                usb_handler
+     00000090  _TIN0                              usb_handler
+     00000091  _AIN0                              usb_handler
+     00000091  _CAP2                              usb_handler
+     00000091  _PP11                              neo
+     00000091  _T2EX                              usb_handler
+     00000091  _TIN1                              usb_handler
+     00000091  _USB_C_CTRL                        usb_handler
+     00000091  _VBUS2                             usb_handler
+     00000092  _P1_MOD_OC                         usb_handler
+     00000092  _PP12                              neo
+     00000092  _RXD_                              usb_handler
+ASxxxx Linker V05.50.4-SDLD,  page 4.
+Hexadecimal  [32-Bits]
+
+Area                                    Addr        Size        Decimal Bytes (Attributes)
+--------------------------------        ----        ----        ------- ----- ------------
+.  .ABS.                            00000000    00000000 =           0. bytes (ABS,CON)
+
+         Value  Global                             Global Defined In Module
+         -----  --------------------------------   ------------------------
+     00000093  _P1_DIR_PU                         usb_handler
+     00000093  _PP13                              neo
+     00000093  _TXD_                              usb_handler
+     00000094  _AIN1                              usb_handler
+     00000094  _CAP1_                             usb_handler
+     00000094  _PP14                              neo
+     00000094  _SCS                               usb_handler
+     00000094  _T2_                               usb_handler
+     00000094  _TIN2                              usb_handler
+     00000094  _UCC1                              usb_handler
+     00000095  _AIN2                              usb_handler
+     00000095  _MOSI                              usb_handler
+     00000095  _PP15                              neo
+     00000095  _PWM1                              usb_handler
+     00000095  _TIN3                              usb_handler
+     00000095  _UCC2                              usb_handler
+     00000096  _MISO                              usb_handler
+     00000096  _P3_MOD_OC                         usb_handler
+     00000096  _PP16                              neo
+     00000096  _RXD1                              usb_handler
+     00000096  _TIN4                              usb_handler
+     00000097  _P3_DIR_PU                         usb_handler
+     00000097  _PP17                              neo
+     00000097  _SCK                               usb_handler
+     00000097  _TIN5                              usb_handler
+     00000097  _TXD1                              usb_handler
+     00000098  _RI                                usb_handler
+     00000098  _SCON                              usb_handler
+     00000099  _SBUF                              usb_handler
+     00000099  _TI                                usb_handler
+     0000009A  _ADC_CFG                           usb_handler
+     0000009A  _RB8                               usb_handler
+     0000009B  _PWM_DATA2                         usb_handler
+     0000009B  _TB8                               usb_handler
+     0000009C  _PWM_DATA1                         usb_handler
+     0000009C  _REN                               usb_handler
+     0000009D  _PWM_CTRL                          usb_handler
+     0000009D  _SM2                               usb_handler
+     0000009E  _PWM_CK_SE                         usb_handler
+     0000009E  _SM1                               usb_handler
+     0000009F  _ADC_DATA                          usb_handler
+     0000009F  _SM0                               usb_handler
+     000000A0  _P2                                usb_handler
+     000000A1  _SAFE_MOD                          usb_handler
+     000000A2  _XBUS_AUX                          usb_handler
+     000000A8  _EX0                               usb_handler
+     000000A8  _IE                                usb_handler
+     000000A9  _ET0                               usb_handler
+     000000A9  _WAKE_CTRL                         usb_handler
+     000000AA  _EX1                               usb_handler
+     000000AB  _ET1                               usb_handler
+ASxxxx Linker V05.50.4-SDLD,  page 5.
+Hexadecimal  [32-Bits]
+
+Area                                    Addr        Size        Decimal Bytes (Attributes)
+--------------------------------        ----        ----        ------- ----- ------------
+.  .ABS.                            00000000    00000000 =           0. bytes (ABS,CON)
+
+         Value  Global                             Global Defined In Module
+         -----  --------------------------------   ------------------------
+     000000AC  _ES                                usb_handler
+     000000AD  _ET2                               usb_handler
+     000000AE  _E_DIS                             usb_handler
+     000000AF  _EA                                usb_handler
+     000000B0  _P3                                usb_handler
+     000000B0  _PP30                              neo
+     000000B0  _PWM1_                             usb_handler
+     000000B0  _RXD                               usb_handler
+     000000B1  _GLOBAL_CFG                        usb_handler
+     000000B1  _PP31                              neo
+     000000B1  _PWM2_                             usb_handler
+     000000B1  _TXD                               usb_handler
+     000000B2  _AIN3                              usb_handler
+     000000B2  _INT0                              usb_handler
+     000000B2  _PP32                              neo
+     000000B2  _TXD1_                             usb_handler
+     000000B2  _VBUS1                             usb_handler
+     000000B3  _INT1                              usb_handler
+     000000B3  _PP33                              neo
+     000000B4  _PP34                              neo
+     000000B4  _PWM2                              usb_handler
+     000000B4  _RXD1_                             usb_handler
+     000000B4  _T0                                usb_handler
+     000000B5  _PP35                              neo
+     000000B5  _T1                                usb_handler
+     000000B6  _PP36                              neo
+     000000B6  _UDP                               usb_handler
+     000000B7  _PP37                              neo
+     000000B7  _UDM                               usb_handler
+     000000B8  _IP                                usb_handler
+     000000B8  _PX0                               usb_handler
+     000000B9  _CLOCK_CFG                         usb_handler
+     000000B9  _PT0                               usb_handler
+     000000BA  _PX1                               usb_handler
+     000000BB  _PT1                               usb_handler
+     000000BC  _PS                                usb_handler
+     000000BD  _PT2                               usb_handler
+     000000BE  _PL_FLAG                           usb_handler
+     000000BF  _PH_FLAG                           usb_handler
+     000000C0  _SCON1                             usb_handler
+     000000C0  _U1RI                              usb_handler
+     000000C1  _SBUF1                             usb_handler
+     000000C1  _U1TI                              usb_handler
+     000000C2  _SBAUD1                            usb_handler
+     000000C2  _U1RB8                             usb_handler
+     000000C3  _TKEY_CTRL                         usb_handler
+     000000C3  _U1TB8                             usb_handler
+     000000C4  _TKEY_DATL                         usb_handler
+     000000C4  _U1REN                             usb_handler
+     000000C5  _TKEY_DATH                         usb_handler
+     000000C5  _U1SMOD                            usb_handler
+ASxxxx Linker V05.50.4-SDLD,  page 6.
+Hexadecimal  [32-Bits]
+
+Area                                    Addr        Size        Decimal Bytes (Attributes)
+--------------------------------        ----        ----        ------- ----- ------------
+.  .ABS.                            00000000    00000000 =           0. bytes (ABS,CON)
+
+         Value  Global                             Global Defined In Module
+         -----  --------------------------------   ------------------------
+     000000C6  _PIN_FUNC                          usb_handler
+     000000C7  _GPIO_IE                           usb_handler
+     000000C7  _U1SM0                             usb_handler
+     000000C8  _CP_RL2                            usb_handler
+     000000C8  _T2CON                             usb_handler
+     000000C9  _C_T2                              usb_handler
+     000000C9  _T2MOD                             usb_handler
+     000000CA  _RCAP2L                            usb_handler
+     000000CA  _TR2                               usb_handler
+     000000CB  _EXEN2                             usb_handler
+     000000CB  _RCAP2H                            usb_handler
+     000000CC  _TCLK                              usb_handler
+     000000CC  _TL2                               usb_handler
+     000000CD  _RCLK                              usb_handler
+     000000CD  _TH2                               usb_handler
+     000000CE  _EXF2                              usb_handler
+     000000CE  _T2CAP1L                           usb_handler
+     000000CF  _CAP1F                             usb_handler
+     000000CF  _T2CAP1H                           usb_handler
+     000000CF  _TF2                               usb_handler
+     000000D0  _P                                 usb_handler
+     000000D0  _PSW                               usb_handler
+     000000D1  _F1                                usb_handler
+     000000D1  _UDEV_CTRL                         usb_handler
+     000000D2  _OV                                usb_handler
+     000000D2  _UEP1_CTRL                         usb_handler
+     000000D3  _RS0                               usb_handler
+     000000D3  _UEP1_T_LEN                        usb_handler
+     000000D4  _RS1                               usb_handler
+     000000D4  _UEP2_CTRL                         usb_handler
+     000000D5  _F0                                usb_handler
+     000000D5  _UEP2_T_LEN                        usb_handler
+     000000D6  _AC                                usb_handler
+     000000D6  _UEP3_CTRL                         usb_handler
+     000000D7  _CY                                usb_handler
+     000000D7  _UEP3_T_LEN                        usb_handler
+     000000D8  _UIF_BUS_RST                       usb_handler
+     000000D8  _UIF_DETECT                        usb_handler
+     000000D8  _USB_INT_FG                        usb_handler
+     000000D9  _UIF_TRANSFER                      usb_handler
+     000000D9  _USB_INT_ST                        usb_handler
+     000000DA  _UIF_SUSPEND                       usb_handler
+     000000DA  _USB_MIS_ST                        usb_handler
+     000000DB  _UIF_HST_SOF                       usb_handler
+     000000DB  _USB_RX_LEN                        usb_handler
+     000000DC  _UEP0_CTRL                         usb_handler
+     000000DC  _UIF_FIFO_OV                       usb_handler
+     000000DD  _UEP0_T_LEN                        usb_handler
+     000000DD  _U_SIE_FREE                        usb_handler
+     000000DE  _UEP4_CTRL                         usb_handler
+     000000DE  _U_TOG_OK                          usb_handler
+ASxxxx Linker V05.50.4-SDLD,  page 7.
+Hexadecimal  [32-Bits]
+
+Area                                    Addr        Size        Decimal Bytes (Attributes)
+--------------------------------        ----        ----        ------- ----- ------------
+.  .ABS.                            00000000    00000000 =           0. bytes (ABS,CON)
+
+         Value  Global                             Global Defined In Module
+         -----  --------------------------------   ------------------------
+     000000DF  _UEP4_T_LEN                        usb_handler
+     000000DF  _U_IS_NAK                          usb_handler
+     000000E0  _ACC                               usb_handler
+     000000E1  _USB_INT_EN                        usb_handler
+     000000E2  _USB_CTRL                          usb_handler
+     000000E3  _USB_DEV_AD                        usb_handler
+     000000E4  _UEP2_DMA_L                        usb_handler
+     000000E5  _UEP2_DMA_H                        usb_handler
+     000000E6  _UEP3_DMA_L                        usb_handler
+     000000E7  _UEP3_DMA_H                        usb_handler
+     000000E8  _IE_EX                             usb_handler
+     000000E8  _IE_SPI0                           usb_handler
+     000000E9  _IE_TKEY                           usb_handler
+     000000E9  _IP_EX                             usb_handler
+     000000EA  _IE_USB                            usb_handler
+     000000EA  _UEP4_1_MOD                        usb_handler
+     000000EB  _IE_ADC                            usb_handler
+     000000EB  _UEP2_3_MOD                        usb_handler
+     000000EC  _IE_UART1                          usb_handler
+     000000EC  _UEP0_DMA_L                        usb_handler
+     000000ED  _IE_PWMX                           usb_handler
+     000000ED  _UEP0_DMA_H                        usb_handler
+     000000EE  _IE_GPIO                           usb_handler
+     000000EE  _UEP1_DMA_L                        usb_handler
+     000000EF  _IE_WDOG                           usb_handler
+     000000EF  _UEP1_DMA_H                        usb_handler
+     000000F0  _B                                 usb_handler
+     000000F8  _S0_R_FIFO                         usb_handler
+     000000F8  _SPI0_STAT                         usb_handler
+     000000F9  _SPI0_DATA                         usb_handler
+     000000FA  _S0_T_FIFO                         usb_handler
+     000000FA  _SPI0_CTRL                         usb_handler
+     000000FB  _S0_FREE                           usb_handler
+     000000FB  _SPI0_CK_SE                        usb_handler
+     000000FC  _S0_IF_BYTE                        usb_handler
+     000000FC  _SPI0_SETUP                        usb_handler
+     000000FD  _S0_IF_FIRST                       usb_handler
+     000000FE  _RESET_KEEP                        usb_handler
+     000000FE  _S0_IF_OV                          usb_handler
+     000000FF  _S0_FST_ACT                        usb_handler
+     000000FF  _WDOG_COUNT                        usb_handler
+     00008584  _ROM_ADDR                          usb_handler
+     00008F8E  _ROM_DATA                          usb_handler
+     0000C5C4  _TKEY_DAT                          usb_handler
+     0000CBCA  _RCAP2                             usb_handler
+     0000CDCC  _T2COUNT                           usb_handler
+     0000CFCE  _T2CAP1                            usb_handler
+     0000E5E4  _UEP2_DMA                          usb_handler
+     0000E7E6  _UEP3_DMA                          usb_handler
+     0000EDEC  _UEP0_DMA                          usb_handler
+     0000EFEE  _UEP1_DMA                          usb_handler
+
+ASxxxx Linker V05.50.4-SDLD,  page 8.
+Hexadecimal  [32-Bits]
+
+Area                                    Addr        Size        Decimal Bytes (Attributes)
+--------------------------------        ----        ----        ------- ----- ------------
+BSEG_BYTES                          00000020    00000001 =           1. bytes (REL,CON)
+
+         Value  Global                             Global Defined In Module
+         -----  --------------------------------   ------------------------
+ASxxxx Linker V05.50.4-SDLD,  page 9.
+Hexadecimal  [32-Bits]
+
+Area                                    Addr        Size        Decimal Bytes (Attributes)
+--------------------------------        ----        ----        ------- ----- ------------
+REG_BANK_0                          00000000    00000008 =           8. bytes (REL,OVR)
+
+         Value  Global                             Global Defined In Module
+         -----  --------------------------------   ------------------------
+ASxxxx Linker V05.50.4-SDLD,  page 10.
+Hexadecimal  [32-Bits]
+
+Area                                    Addr        Size        Decimal Bytes (Attributes)
+--------------------------------        ----        ----        ------- ----- ------------
+BIT_BANK                            00000021    00000001 =           1. bytes (REL,OVR)
+
+         Value  Global                             Global Defined In Module
+         -----  --------------------------------   ------------------------
+ASxxxx Linker V05.50.4-SDLD,  page 11.
+Hexadecimal  [32-Bits]
+
+Area                                    Addr        Size        Decimal Bytes (Attributes)
+--------------------------------        ----        ----        ------- ----- ------------
+DSEG                                00000000    00000080 =         128. bytes (REL,CON)
+
+         Value  Global                             Global Defined In Module
+         -----  --------------------------------   ------------------------
+     0000000A  _sendKeys_PARM_2                   minikeys
+     0000000B  _sendMouse_PARM_2                  minikeys
+     0000000C  _sendMouse_PARM_3                  minikeys
+     00000010  _setPixelScaled_PARM_2             minikeys
+     00000012  _setPixelScaled_PARM_3             minikeys
+     00000013  _setPixelHue_PARM_2                minikeys
+     00000019  _EEPROM_update_PARM_2              eeprom
+     0000001A  _NEO_writeColor_PARM_2             neo
+     0000001B  _NEO_writeColor_PARM_3             neo
+     0000001C  _NEO_writeHue_PARM_2               neo
+     00000022  _SetupLen                          usb_handler
+     00000024  _SetupReq                          usb_handler
+     00000025  _UsbConfig                         usb_handler
+     00000026  _pDescr                            usb_handler
+
+ASxxxx Linker V05.50.4-SDLD,  page 12.
+Hexadecimal  [32-Bits]
+
+Area                                    Addr        Size        Decimal Bytes (Attributes)
+--------------------------------        ----        ----        ------- ----- ------------
+OSEG                                0000001D    00000003 =           3. bytes (REL,OVR)
+
+         Value  Global                             Global Defined In Module
+         -----  --------------------------------   ------------------------
+     0000001D  _EEPROM_write_PARM_2               eeprom
+     0000001D  _HID_sendReport_PARM_2             hid
+     0000001D  __divsint_PARM_2                   _divuint
+     0000001D  __divuint_PARM_2                   _divuint
+     0000001D  __modsint_PARM_2                   _moduint
+     0000001D  __moduint_PARM_2                   _moduint
+     0000001D  __mulint_PARM_2                    _mulint
+     0000001D  _setPixel_PARM_2                   minikeys
+     0000001E  _setPixel_PARM_3                   minikeys
+     0000001F  _setPixel_PARM_4                   minikeys
+
+ASxxxx Linker V05.50.4-SDLD,  page 13.
+Hexadecimal  [32-Bits]
+
+Area                                    Addr        Size        Decimal Bytes (Attributes)
+--------------------------------        ----        ----        ------- ----- ------------
+ISEG                                00000028    0000000D =          13. bytes (REL,CON)
+
+         Value  Global                             Global Defined In Module
+         -----  --------------------------------   ------------------------
+     00000028  _activeLayer                       minikeys
+     00000029  _editLayer                         minikeys
+     0000002A  _overrideMask                      minikeys
+     0000002B  _heldMediaCtrl                     minikeys
+     0000002C  _frame                             minikeys
+     0000002E  _pressCount                        minikeys
+     0000002F  _layerFlashFrames                  minikeys
+     00000030  _errorFlashFrames                  minikeys
+     00000031  _encoderState                      minikeys
+     00000032  _encoderSteps                      minikeys
+     00000033  _CMD_head                          hid
+     00000034  _CMD_tail                          hid
+ASxxxx Linker V05.50.4-SDLD,  page 14.
+Hexadecimal  [32-Bits]
+
+Area                                    Addr        Size        Decimal Bytes (Attributes)
+--------------------------------        ----        ----        ------- ----- ------------
+SSEG                                00000035    000000CB =         203. bytes (REL,OVR)
+
+         Value  Global                             Global Defined In Module
+         -----  --------------------------------   ------------------------
+     00000035  __start__stack                     minikeys
+
+ASxxxx Linker V05.50.4-SDLD,  page 15.
+Hexadecimal  [32-Bits]
+
+Area                                    Addr        Size        Decimal Bytes (Attributes)
+--------------------------------        ----        ----        ------- ----- ------------
+XSEG                                00000100    0000019C =         412. bytes (REL,CON,XDATA)
+
+         Value  Global                             Global Defined In Module
+         -----  --------------------------------   ------------------------
+D:   00000100  _bindings                          minikeys
+D:   000001C6  _light                             minikeys
+D:   000001CE  _layerColors                       minikeys
+D:   000001D7  _overrideColors                    minikeys
+D:   000001E0  _kbdReport                         minikeys
+D:   000001E9  _conReport                         minikeys
+D:   000001EC  _mouseReport                       minikeys
+D:   000001F1  _heldMods                          minikeys
+D:   000001F7  _heldKeys                          minikeys
+D:   000001FD  _heldButtons                       minikeys
+D:   00000203  _pixels                            minikeys
+D:   0000020C  _pressLevel                        minikeys
+D:   0000020F  _pressColor                        minikeys
+D:   00000218  _tmpColor                          minikeys
+D:   0000021B  _cmd                               minikeys
+D:   00000227  _buttonStable                      minikeys
+D:   0000022B  _buttonCount                       minikeys
+D:   0000022F  _diagLast                          minikeys
+D:   0000023C  _CMD_queue                         hid
+
+ASxxxx Linker V05.50.4-SDLD,  page 16.
+Hexadecimal  [32-Bits]
+
+Area                                    Addr        Size        Decimal Bytes (Attributes)
+--------------------------------        ----        ----        ------- ----- ------------
+HOME                                00000000    000000B8 =         184. bytes (REL,CON,CODE)
+
+         Value  Global                             Global Defined In Module
+         -----  --------------------------------   ------------------------
+C:   00000048  sdcc_atomic_exchange_rollback_st   minikeys
+C:   0000006F  sdcc_atomic_exchange_gptr_impl     minikeys
+C:   0000006F  sdcc_atomic_exchange_rollback_en   minikeys
+C:   0000007F  sdcc_atomic_compare_exchange_gpt   minikeys
+C:   00000089  __sdcc_program_startup             minikeys
+C:   0000008E  sdcc_atomic_maybe_rollback         
+ASxxxx Linker V05.50.4-SDLD,  page 17.
+Hexadecimal  [32-Bits]
+
+Area                                    Addr        Size        Decimal Bytes (Attributes)
+--------------------------------        ----        ----        ------- ----- ------------
+GSINIT0                             000000B8    00000003 =           3. bytes (REL,CON,CODE)
+
+         Value  Global                             Global Defined In Module
+         -----  --------------------------------   ------------------------
+C:   000000B8  __sdcc_gsinit_startup              
+
+ASxxxx Linker V05.50.4-SDLD,  page 18.
+Hexadecimal  [32-Bits]
+
+Area                                    Addr        Size        Decimal Bytes (Attributes)
+--------------------------------        ----        ----        ------- ----- ------------
+GSINIT2                             000000BB    0000000A =          10. bytes (REL,CON,CODE)
+
+         Value  Global                             Global Defined In Module
+         -----  --------------------------------   ------------------------
+ASxxxx Linker V05.50.4-SDLD,  page 19.
+Hexadecimal  [32-Bits]
+
+Area                                    Addr        Size        Decimal Bytes (Attributes)
+--------------------------------        ----        ----        ------- ----- ------------
+GSINIT4                             000000C5    00000006 =           6. bytes (REL,CON,CODE)
+
+         Value  Global                             Global Defined In Module
+         -----  --------------------------------   ------------------------
+C:   000000C5  __mcs51_genRAMCLEAR                
+
+ASxxxx Linker V05.50.4-SDLD,  page 20.
+Hexadecimal  [32-Bits]
+
+Area                                    Addr        Size        Decimal Bytes (Attributes)
+--------------------------------        ----        ----        ------- ----- ------------
+GSINIT                              000000CB    00000030 =          48. bytes (REL,CON,CODE)
+
+         Value  Global                             Global Defined In Module
+         -----  --------------------------------   ------------------------
+ASxxxx Linker V05.50.4-SDLD,  page 21.
+Hexadecimal  [32-Bits]
+
+Area                                    Addr        Size        Decimal Bytes (Attributes)
+--------------------------------        ----        ----        ------- ----- ------------
+GSFINAL                             000000FB    00000003 =           3. bytes (REL,CON,CODE)
+
+         Value  Global                             Global Defined In Module
+         -----  --------------------------------   ------------------------
+ASxxxx Linker V05.50.4-SDLD,  page 22.
+Hexadecimal  [32-Bits]
+
+Area                                    Addr        Size        Decimal Bytes (Attributes)
+--------------------------------        ----        ----        ------- ----- ------------
+CSEG                                000000FE    00001A18 =        6680. bytes (REL,CON,CODE)
+
+         Value  Global                             Global Defined In Module
+         -----  --------------------------------   ------------------------
+C:   000000FE  _USB_ISR                           minikeys
+C:   0000013F  _setDefaults                       minikeys
+C:   000002AA  _loadSettings                      minikeys
+C:   00000416  _saveSettings                      minikeys
+C:   00000525  _sendKeys                          minikeys
+C:   000005A3  _sendMedia                         minikeys
+C:   000005C4  _sendMouse                         minikeys
+C:   00000609  _controlDown                       minikeys
+C:   0000077F  _controlUp                         minikeys
+C:   000007F1  _releaseAll                        minikeys
+C:   00000803  _setPixel                          minikeys
+C:   0000082A  _setPixelScaled                    minikeys
+C:   00000867  _setPixelHue                       minikeys
+C:   000008E8  _lightColor                        minikeys
+C:   00000904  _flashPress                        minikeys
+C:   00000974  _renderLights                      minikeys
+C:   00000CDA  _setLayer                          minikeys
+C:   00000D09  _enterBootloader                   minikeys
+C:   00000D29  _controlIndex                      minikeys
+C:   00000D50  _handleCommand                     minikeys
+C:   00001075  _readEncoder                       minikeys
+C:   0000108C  _pollEncoder                       minikeys
+C:   000010F1  _readButton                        minikeys
+C:   00001128  _pollButtons                       minikeys
+C:   000011BC  _diagRead                          minikeys
+C:   00001244  _diagType                          minikeys
+C:   00001256  _diagLoop                          minikeys
+C:   0000133A  _main                              minikeys
+C:   0000145C  _DLY_us                            delay
+C:   0000147B  _DLY_ms                            delay
+C:   00001499  __delay_more_cycles                delay
+C:   000014A3  _EEPROM_write                      eeprom
+C:   000014D5  _EEPROM_read                       eeprom
+C:   000014E5  _EEPROM_update                     eeprom
+C:   000014FD  _HID_init                          hid
+C:   00001504  _HID_sendReport                    hid
+C:   00001535  _CMD_take                          hid
+C:   00001586  _HID_setup                         hid
+C:   0000159F  _HID_reset                         hid
+C:   000015A8  _HID_EP1_IN                        hid
+C:   000015B6  _CMD_EP2_OUT                       hid
+C:   00001633  _NEO_sendByte                      neo
+C:   00001649  _NEO_writeColor                    neo
+C:   00001660  _NEO_writeHue                      neo
+C:   000016B7  _USB_EP0_copyDescr                 usb_handler
+C:   000016D1  _USB_EP0_SETUP                     usb_handler
+C:   00001994  _USB_EP0_IN                        usb_handler
+C:   000019F0  _USB_EP0_OUT                       usb_handler
+C:   000019F7  _USB_interrupt                     usb_handler
+C:   00001A60  _USB_init                          usb_handler
+ASxxxx Linker V05.50.4-SDLD,  page 23.
+Hexadecimal  [32-Bits]
+
+Area                                    Addr        Size        Decimal Bytes (Attributes)
+--------------------------------        ----        ----        ------- ----- ------------
+CSEG                                000000FE    00001A18 =        6680. bytes (REL,CON,CODE)
+
+         Value  Global                             Global Defined In Module
+         -----  --------------------------------   ------------------------
+C:   00001A7F  __divuint                          _divuint
+C:   00001AA8  __mulint                           _mulint
+C:   00001AA8  __mulint_dummy                     _mulint
+C:   00001AC5  __moduint                          _moduint
+C:   00001B12  ___sdcc_external_startup           _startup
+
+ASxxxx Linker V05.50.4-SDLD,  page 24.
+Hexadecimal  [32-Bits]
+
+Area                                    Addr        Size        Decimal Bytes (Attributes)
+--------------------------------        ----        ----        ------- ----- ------------
+CONST                               00001B16    0000015C =         348. bytes (REL,CON,CODE)
+
+         Value  Global                             Global Defined In Module
+         -----  --------------------------------   ------------------------
+C:   00001B16  _keyPixel                          minikeys
+C:   00001B19  _palette                           minikeys
+C:   00001B25  _encoderTable                      minikeys
+C:   00001B35  _diagPins                          minikeys
+C:   00001B42  _diagNames                         minikeys
+C:   00001B5C  _DevDescr                          usb_descr
+C:   00001B6E  _CfgDescr                          usb_descr
+C:   00001BA0  _ReportDescr                       usb_descr
+C:   00001C1F  _ReportDescrLen                    usb_descr
+C:   00001C20  _LangDescr                         usb_descr
+C:   00001C24  _ManufDescr                        usb_descr
+C:   00001C36  _ProdDescr                         usb_descr
+C:   00001C56  _SerDescr                          usb_descr
+C:   00001C60  _InterfDescr                       usb_descr
+
+ASxxxx Linker V05.50.4-SDLD,  page 25.
+
+Files Linked                              [ module(s) ]
+
+build-diag/minikeys.rel                   [  ]
+build-diag/delay.rel                      [  ]
+build-diag/eeprom.rel                     [  ]
+build-diag/hid.rel                        [  ]
+build-diag/neo.rel                        [  ]
+build-diag/usb_descr.rel                  [  ]
+build-diag/usb_handler.rel                [  ]
+
+
+Libraries Linked                          [ object file ]
+
+/opt/homebrew/bin/../share/sdcc/lib/small/libint.lib
+                                          [ _divuint.rel ]
+/opt/homebrew/bin/../share/sdcc/lib/small/mcs51.lib
+                                          [ crtclear.rel ]
+/opt/homebrew/bin/../share/sdcc/lib/small/mcs51.lib
+                                          [ __sdcc_atomic_maybe_rollback.rel ]
+/opt/homebrew/bin/../share/sdcc/lib/small/libint.lib
+                                          [ _mulint.rel ]
+/opt/homebrew/bin/../share/sdcc/lib/small/libint.lib
+                                          [ _moduint.rel ]
+/opt/homebrew/bin/../share/sdcc/lib/small/mcs51.lib
+                                          [ crtstart.rel ]
+/opt/homebrew/bin/../share/sdcc/lib/small/libsdcc.lib
+                                          [ _startup.rel ]
+
+ASxxxx Linker V05.50.4-SDLD,  page 26.
+
+User Base Address Definitions
+
+HOME = 0x0000
+XSEG = 0x0100
+PSEG = 0x0100
+ISEG = 0x0000
+BSEG = 0x0000
+
+
