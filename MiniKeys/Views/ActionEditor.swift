@@ -58,7 +58,7 @@ struct ActionEditor: View {
         }
         .onAppear { kind = Kind(model.action(for: model.selected)) }
         .onChange(of: model.selected) { control in kind = Kind(model.action(for: control)) }
-        .onChange(of: model.activeLayer) { _ in kind = Kind(model.action(for: model.selected)) }
+        .onChange(of: model.activeLayerID) { _ in kind = Kind(model.action(for: model.selected)) }
     }
 }
 

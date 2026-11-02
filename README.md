@@ -27,7 +27,10 @@ as "MINI KeyBoard"). It replaces the vendor's Windows tool.
   sequences of up to 5 keys, media keys (play, volume, brightness, dictation…) and mouse (clicks
   and scroll).
 - **Saved instantly** to the keypad's memory: it works on any computer, without the app.
-- **3 layers**, switchable from the toolbar, the Keypad menu (⌘1–⌘3) or the menu bar.
+- **Up to 30 layers**, each with its own name and color, in a sidebar you can reorder. Switch
+  them from the sidebar, the Keypad menu (⌘1–⌘9, ⌘[ and ⌘]) or the menu bar. With the MiniKeys
+  firmware the first 3 are saved on the keypad: press and turn the knob to switch between them
+  without the Mac, and MiniKeys follows.
 - **Light**: off, on press (the pressed key lights up, in a new color each time) or color wave (a
   light runs over the keys in red, blue and green), with a faithful on-screen preview. Option to
   turn it off while the Mac is locked.
@@ -37,7 +40,7 @@ as "MINI KeyBoard"). It replaces the vendor's Windows tool.
   rainbow, wave, on press, layer color) with your own colors, speed and brightness, plus instant
   layers. The firmware and its installer live in their own repository.
 - **Presets**: AI (accept, reject, dictation; the knob picks options), Games, Media, Copy & Paste,
-  Browse.
+  Browse, plus your own: save any layer as a preset and share it as a `.minikeys-preset` file.
 
 No drivers or special permissions: the app talks to the keypad's programming interface directly
 over USB.

@@ -137,11 +137,26 @@ final class KeyboardDevice: ObservableObject {
 
     /// An open programming interface, kept between writes so live light effects stay cheap.
     /// Only touched on `queue`.
-    private struct Session {
+    private final class Session {
         let interface: IOUSBHostInterface
         let pipe: IOUSBHostPipe
         let buffer: NSMutableData
+        /// Events from the MiniKeys firmware 4+ (EP3 IN), e.g. a layer switched on the keypad.
+        let events: IOUSBHostPipe?
+        let eventBuffer: NSMutableData?
+
+        init(interface: IOUSBHostInterface, pipe: IOUSBHostPipe, buffer: NSMutableData,
+             events: IOUSBHostPipe?, eventBuffer: NSMutableData?) {
+            self.interface = interface
+            self.pipe = pipe
+            self.buffer = buffer
+            self.events = events
+            self.eventBuffer = eventBuffer
+        }
     }
+
+    /// Called on the main queue when the keypad switches to a saved layer (1...3) by itself.
+    var onLayerSwitched: ((Int) -> Void)?
 
     private var session: Session?
 
@@ -161,23 +176,57 @@ final class KeyboardDevice: ObservableObject {
         guard service != 0 else { throw DeviceError.notConnected }
         defer { IOObjectRelease(service) }
         let interface = try IOUSBHostInterface(__ioService: service, options: [], queue: nil, interestHandler: nil)
-        guard let pipe = try Self.outPipe(of: interface) else {
+        let pipes = try Self.pipes(of: interface)
+        guard let pipe = pipes.out else {
             interface.destroy()
             throw DeviceError.noEndpoint
         }
         // IOUSBHost only transfers buffers it allocated itself.
-        let session = Session(interface: interface, pipe: pipe, buffer: try interface.ioData(withCapacity: Self.packetSize))
+        let session = Session(
+            interface: interface, pipe: pipe, buffer: try interface.ioData(withCapacity: Self.packetSize),
+            events: pipes.in, eventBuffer: pipes.in == nil ? nil : try interface.ioData(withCapacity: 8)
+        )
         self.session = session
+        listen(to: session)
         return session
+    }
+
+    /// Opens the interface just to receive events (firmware 4+), without sending anything.
+    func startListening() {
+        queue.async { _ = try? self.openSession() }
+    }
+
+    /// Waits for the next event and re-arms itself until the session closes.
+    private func listen(to session: Session) {
+        guard let events = session.events, let buffer = session.eventBuffer else { return }
+        do {
+            try events.enqueueIORequest(with: buffer, completionTimeout: 0) { [weak self] status, count in
+                guard let self else { return }
+                if status == kIOReturnSuccess, count >= 2 {
+                    let bytes = [UInt8](Data(bytes: buffer.bytes, count: count))
+                    if bytes[0] == 0x4C {
+                        DispatchQueue.main.async { self.onLayerSwitched?(Int(bytes[1])) }
+                    }
+                }
+                guard status == kIOReturnSuccess else { return }    // aborted: the session closed
+                queue.async {
+                    if self.session === session { self.listen(to: session) }
+                }
+            }
+        } catch {
+            // No events from this firmware; writing still works.
+        }
     }
 
     private var lastUse = Date.distantPast
 
     /// Releases the interface after a few idle seconds, so tools like the firmware flasher can open it.
+    /// Firmware that sends events keeps the interface open to receive them; quit MiniKeys before
+    /// using the flasher.
     private func closeSessionWhenIdle() {
         lastUse = Date()
         queue.asyncAfter(deadline: .now() + 3) { [weak self] in
-            guard let self, Date().timeIntervalSince(lastUse) >= 2.9 else { return }
+            guard let self, Date().timeIntervalSince(lastUse) >= 2.9, session?.events == nil else { return }
             closeSession()
         }
     }
@@ -200,16 +249,18 @@ final class KeyboardDevice: ObservableObject {
         }
     }
 
-    private static func outPipe(of interface: IOUSBHostInterface) throws -> IOUSBHostPipe? {
+    private static func pipes(of interface: IOUSBHostInterface) throws -> (out: IOUSBHostPipe?, in: IOUSBHostPipe?) {
         let configuration = interface.configurationDescriptor
         let interfaceDescriptor = interface.interfaceDescriptor
+        var out: IOUSBHostPipe?
+        var input: IOUSBHostPipe?
         var current = UnsafeRawPointer(interfaceDescriptor).assumingMemoryBound(to: IOUSBDescriptorHeader.self)
         while let endpoint = IOUSBGetNextEndpointDescriptor(configuration, interfaceDescriptor, current) {
-            if endpoint.pointee.bEndpointAddress & 0x80 == 0 {
-                return try interface.copyPipe(withAddress: Int(endpoint.pointee.bEndpointAddress))
-            }
+            let address = Int(endpoint.pointee.bEndpointAddress)
+            if address & 0x80 == 0 { out = try interface.copyPipe(withAddress: address) }
+            else { input = try interface.copyPipe(withAddress: address) }
             current = UnsafeRawPointer(endpoint).assumingMemoryBound(to: IOUSBDescriptorHeader.self)
         }
-        return nil
+        return (out, input)
     }
 }

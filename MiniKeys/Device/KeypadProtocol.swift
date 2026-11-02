@@ -75,6 +75,16 @@ enum KeypadProtocol {
 
     static let clearKeyColors: [UInt8] = [0xB2, 0xFF]
 
+    static func layerColor(_ layer: Int, _ color: RGB) -> [UInt8] {
+        [0xB3, UInt8(clamping: layer), color.r, color.g, color.b]
+    }
+
+    /// Firmware 4+: pressing and turning the knob switches saved layers on the keypad (firmware 5+;
+    /// firmware 4 used a knob + keys combo). Saved with `saveLight`.
+    static func layerSwitching(_ isOn: Bool) -> [UInt8] {
+        [0xB5, isOn ? 1 : 0]
+    }
+
     /// Restarts the light effect now (firmware 3+), to line it up with MiniKeys' preview.
     static let syncLightClock: [UInt8] = [0xB4]
 

@@ -9,7 +9,7 @@ struct MiniKeysApp: App {
             ContentView()
                 .environmentObject(model)
         }
-        .defaultSize(width: 940, height: 860)
+        .defaultSize(width: 1120, height: 800)
         .windowResizability(.contentMinSize)
         .windowToolbarStyle(.unified(showsTitle: true))
         .commands { KeyboardCommands(model: model) }
@@ -27,12 +27,39 @@ private struct KeyboardCommands: Commands {
 
     var body: some Commands {
         CommandMenu("Keypad") {
-            ForEach(0..<AppModel.layerCount, id: \.self) { layer in
-                Toggle("Layer \(layer + 1)", isOn: Binding(
-                    get: { model.activeLayer == layer },
-                    set: { if $0 { model.activateLayer(layer) } }
-                ))
-                .keyboardShortcut(KeyEquivalent(Character("\(layer + 1)")), modifiers: .command)
+            Button("New Layer") { model.addLayer() }
+                .keyboardShortcut("n", modifiers: .command)
+                .disabled(!model.canAddLayer)
+            Button("Rename and Color Layer…") { model.sheet = .layerSettings(model.activeLayerID) }
+            Divider()
+            Button("Previous Layer") { model.activateAdjacentLayer(-1) }
+                .keyboardShortcut("[", modifiers: .command)
+                .disabled(model.layers.count < 2)
+            Button("Next Layer") { model.activateAdjacentLayer(1) }
+                .keyboardShortcut("]", modifiers: .command)
+                .disabled(model.layers.count < 2)
+            Menu("Layers") {
+                ForEach(Array(model.layers.enumerated()), id: \.element.id) { index, layer in
+                    if index < 9 {
+                        Toggle(layer.name, isOn: Binding(
+                            get: { model.activeLayerID == layer.id },
+                            set: { if $0 { model.activateLayer(layer.id) } }
+                        ))
+                        .keyboardShortcut(KeyEquivalent(Character("\(index + 1)")), modifiers: .command)
+                    } else {
+                        Toggle(layer.name, isOn: Binding(
+                            get: { model.activeLayerID == layer.id },
+                            set: { if $0 { model.activateLayer(layer.id) } }
+                        ))
+                    }
+                }
+            }
+            Divider()
+            Button("Save Layer as Preset…") { model.sheet = .presetEditor(nil) }
+            Menu("Apply Preset") {
+                ForEach(model.allPresets) { preset in
+                    Button(preset.title) { model.applyPreset(preset) }
+                }
             }
             Divider()
             if model.device.hasMiniKeysFirmware {
@@ -44,10 +71,9 @@ private struct KeyboardCommands: Commands {
                     ForEach(LEDMode.allCases, id: \.self) { Text($0.title).tag(Optional($0)) }
                 }
             }
-            Divider()
             Link("Firmware…", destination: URL(string: "https://github.com/MeLlamoCarl/MiniKeys-Firmware#install")!)
             Divider()
-            Button("Rewrite Layer on Keypad") { model.writeAll() }
+            Button("Save Layer to Keypad") { model.writeAll() }
                 .keyboardShortcut("r", modifiers: [.command, .shift])
                 .disabled(!model.device.isConnected)
         }
@@ -61,8 +87,13 @@ private struct MenuBarContent: View {
     var body: some View {
         Text(model.device.isConnected ? "Keypad connected" : "Keypad disconnected")
         Divider()
-        Picker("Layer", selection: Binding(get: { model.activeLayer }, set: { model.activateLayer($0) })) {
-            ForEach(0..<AppModel.layerCount, id: \.self) { Text("Layer \($0 + 1)").tag($0) }
+        Picker("Layer", selection: Binding(get: { model.activeLayerID }, set: { model.activateLayer($0) })) {
+            ForEach(model.layers) { Text($0.name).tag($0.id) }
+        }
+        Menu("Apply Preset") {
+            ForEach(model.allPresets) { preset in
+                Button(preset.title) { model.applyPreset(preset) }
+            }
         }
         if model.device.hasMiniKeysFirmware {
             Picker("Light", selection: Binding(get: { model.lightSettings.effect }, set: { effect in model.updateLight { $0.effect = effect } })) {

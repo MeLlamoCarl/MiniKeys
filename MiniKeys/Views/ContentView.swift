@@ -1,45 +1,42 @@
 import SwiftUI
+import UniformTypeIdentifiers
+
+/// Sheets the window can show, also opened from the menu bar commands.
+enum AppSheet: Identifiable {
+    case layerSettings(UUID)
+    case presetEditor(CustomPreset?)          // nil: save the active layer as a new preset
+
+    var id: String {
+        switch self {
+        case .layerSettings(let id): "layer-\(id)"
+        case .presetEditor(let preset): "preset-\(preset?.id.uuidString ?? "new")"
+        }
+    }
+}
 
 struct ContentView: View {
     @EnvironmentObject private var model: AppModel
 
     var body: some View {
-        VStack(spacing: 0) {
-            KeypadStage()
-            ScrollView {
-                HStack(alignment: .top, spacing: 16) {
-                    ActionEditor()
-                        .frame(maxWidth: .infinity)
-                    VStack(spacing: 16) {
-                        LightPanel()
-                        PresetPanel()
-                        FirmwarePanel()
-                    }
-                    .frame(width: 280)
-                }
-                .padding(20)
-            }
+        NavigationSplitView {
+            LayerSidebar()
+                .navigationSplitViewColumnWidth(min: 190, ideal: 220, max: 300)
+        } detail: {
+            DetailView()
         }
-        .frame(minWidth: 880, minHeight: 640)
-        // HIG: a concise window title (not the app name); status goes in the subtitle, not in a
-        // custom badge, so the toolbar keeps the system's own glass appearance.
-        .navigationTitle("Mini Keypad")
-        .navigationSubtitle(model.device.isConnected ? "Connected" : "Disconnected")
+        .frame(minWidth: 860, minHeight: 600)
+        // HIG: a concise window title (the layer, not the app name); status in the subtitle.
+        .navigationTitle(model.activeLayer.name)
+        .navigationSubtitle(model.device.isConnected ? "Keypad connected" : "Keypad disconnected")
         .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                LayerPicker()
-            }
-            ToolbarItem(placement: .primaryAction) {
-                Button {
-                    model.writeAll()
-                } label: {
-                    Label("Rewrite Layer", systemImage: "arrow.trianglehead.2.clockwise")
-                }
-                .help("Writes every key of this layer to the keypad again")
-                .disabled(!model.device.isConnected)
+            SaveToKeypadToolbarItem()
+        }
+        .sheet(item: $model.sheet) { sheet in
+            switch sheet {
+            case .layerSettings(let id): LayerSettingsSheet(layerID: id)
+            case .presetEditor(let preset): PresetEditorSheet(preset: preset)
             }
         }
-        .background(Color(nsColor: .windowBackgroundColor))
         .overlay(alignment: .bottom) {
             if let toast = model.toast {
                 ToastView(toast: toast)
@@ -50,17 +47,405 @@ struct ContentView: View {
     }
 }
 
-private struct LayerPicker: View {
+// MARK: - Sidebar
+
+private struct LayerSidebar: View {
     @EnvironmentObject private var model: AppModel
 
     var body: some View {
-        Picker("Layer", selection: Binding(get: { model.activeLayer }, set: { model.activateLayer($0) })) {
-            ForEach(0..<AppModel.layerCount, id: \.self) { Text("Layer \($0 + 1)").tag($0) }
+        List(selection: Binding(
+            get: { Optional(model.activeLayerID) },
+            set: { if let id = $0 { model.activateLayer(id) } }
+        )) {
+            Section {
+                ForEach(Array(model.layers.enumerated()), id: \.element.id) { index, layer in
+                    LayerRow(layer: layer, keypadSlot: model.isSavedOnKeypad(index) ? index + 1 : nil)
+                        .tag(layer.id)
+                        .contextMenu { LayerMenuItems(layer: layer) }
+                        // Swipe left with two fingers on the trackpad, like a conversation in Messages.
+                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                            if model.layers.count > 1 {
+                                Button(role: .destructive) {
+                                    model.deleteLayer(layer.id)
+                                } label: {
+                                    Label("Delete", systemImage: "trash")
+                                        .labelStyle(.iconOnly)
+                                }
+                            }
+                        }
+                }
+                .onMove { model.moveLayers(from: $0, to: $1) }
+            } header: {
+                Text("Layers")
+            }
         }
-        .pickerStyle(.segmented)
-        .help("The keypad stores 3 layers. Choosing one here also makes it active on the keypad.")
+        .listStyle(.sidebar)
+        .safeAreaInset(edge: .bottom) {
+            VStack(alignment: .leading, spacing: 4) {
+                if model.savedLayerCount > 0 {
+                    Text("\(Image(systemName: "keyboard")) Saved on the keypad. Drag to choose which; press and turn the knob to switch.")
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Text("\(model.layers.count) of \(KeypadLayer.maxCount) layers")
+            }
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+        }
+        // HIG: no key actions at the bottom of a sidebar; New Layer lives in its toolbar.
+        .toolbar {
+            ToolbarItem {
+                Button {
+                    model.addLayer()
+                } label: {
+                    Label("New Layer", systemImage: "plus")
+                }
+                .disabled(!model.canAddLayer)
+                .help("New layer (⌘N), up to \(KeypadLayer.maxCount)")
+            }
+        }
     }
 }
+
+private struct LayerRow: View {
+    @EnvironmentObject private var model: AppModel
+    let layer: KeypadLayer
+    let keypadSlot: Int?
+
+    var body: some View {
+        Label {
+            HStack(spacing: 6) {
+                Text(layer.name)
+                    .lineLimit(1)
+                Spacer(minLength: 4)
+                if let keypadSlot {
+                    Label("\(keypadSlot)", systemImage: "keyboard")
+                        .labelStyle(.titleAndIcon)
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Capsule().fill(.primary.opacity(0.08)))
+                        .help("Saved on the keypad as layer \(keypadSlot)")
+                }
+            }
+        } icon: {
+            Circle()
+                .fill(layer.color.color)
+                .frame(width: 10, height: 10)
+                .overlay(Circle().strokeBorder(.primary.opacity(0.15)))
+        }
+        .help(layer.id == model.activeLayerID ? "On the keypad now" : "Click to write this layer to the keypad")
+    }
+}
+
+struct LayerMenuItems: View {
+    @EnvironmentObject private var model: AppModel
+    let layer: KeypadLayer
+
+    var body: some View {
+        Button("Rename and Color…") { model.sheet = .layerSettings(layer.id) }
+        Button("Duplicate") { model.addLayer(duplicating: layer) }
+            .disabled(!model.canAddLayer)
+        Button("Save as Preset…") {
+            model.activateLayer(layer.id)
+            model.sheet = .presetEditor(nil)
+        }
+        Divider()
+        Button("Delete", role: .destructive) { model.deleteLayer(layer.id) }
+            .disabled(model.layers.count == 1)
+    }
+}
+
+// MARK: - Detail
+
+private struct DetailView: View {
+    var body: some View {
+        GeometryReader { proxy in
+            ScrollView {
+                VStack(spacing: 16) {
+                    KeypadStage()
+                    // Side by side when there is room, stacked in narrow windows.
+                    if proxy.size.width >= 820 {
+                        HStack(alignment: .top, spacing: 16) {
+                            mainColumn
+                            sideColumn
+                                .frame(width: 300)
+                        }
+                    } else {
+                        VStack(spacing: 16) {
+                            mainColumn
+                            sideColumn
+                        }
+                    }
+                }
+                .padding(20)
+            }
+        }
+        .background(WindowMaterial())
+    }
+
+    private var mainColumn: some View {
+        VStack(spacing: 16) {
+            ActionEditor()
+            PresetsPanel()
+        }
+    }
+
+    private var sideColumn: some View {
+        VStack(spacing: 16) {
+            LightPanel()
+            FirmwarePanel()
+        }
+    }
+}
+
+/// Translucent window background (content layer: a standard material, per the HIG).
+private struct WindowMaterial: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSVisualEffectView {
+        let view = NSVisualEffectView()
+        view.material = .underWindowBackground
+        view.blendingMode = .behindWindow
+        view.state = .followsWindowActiveState
+        return view
+    }
+
+    func updateNSView(_ view: NSVisualEffectView, context: Context) {}
+}
+
+// MARK: - Presets
+
+private struct PresetsPanel: View {
+    @EnvironmentObject private var model: AppModel
+
+    var body: some View {
+        Card {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    Label("Presets", systemImage: "square.grid.2x2")
+                        .font(.headline)
+                    Spacer()
+                    Button {
+                        model.sheet = .presetEditor(nil)
+                    } label: {
+                        Label("Save Layer as Preset…", systemImage: "plus")
+                    }
+                    .help("Saves the keys of \(model.activeLayer.name) as a preset you can reuse or share")
+                    Button {
+                        importPresets()
+                    } label: {
+                        Label("Import…", systemImage: "square.and.arrow.down")
+                    }
+                    .help("Imports presets shared by others (.minikeys-preset)")
+                }
+                .controlSize(.small)
+
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 190), spacing: 10)], spacing: 10) {
+                    ForEach(Presets.all) { preset in
+                        PresetTile(preset: preset, custom: nil)
+                    }
+                    ForEach(model.customPresets) { custom in
+                        PresetTile(preset: custom.preset, custom: custom)
+                    }
+                }
+
+                Text("A preset replaces the keys of the current layer, \(model.activeLayer.name).")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    private func importPresets() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [UTType(filenameExtension: "minikeys-preset") ?? .json, .json]
+        panel.allowsMultipleSelection = true
+        panel.message = "Choose MiniKeys presets to import"
+        if panel.runModal() == .OK { model.importPresets(from: panel.urls) }
+    }
+}
+
+private struct PresetTile: View {
+    @EnvironmentObject private var model: AppModel
+    let preset: Preset
+    let custom: CustomPreset?
+
+    var body: some View {
+        Button {
+            model.applyPreset(preset)
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: preset.symbol)
+                    .font(.title3)
+                    .foregroundStyle(Color.accentColor)
+                    .frame(width: 26)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(preset.title)
+                        .font(.callout.weight(.semibold))
+                        .lineLimit(1)
+                    Text(preset.subtitle)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+                Spacer(minLength: 0)
+                if custom != nil {
+                    Image(systemName: "person.fill")
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                        .help("Your preset")
+                }
+            }
+            .padding(10)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(.primary.opacity(0.06)))
+            .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+        }
+        .buttonStyle(.pressable)
+        .help("Applies “\(preset.title)” to \(model.activeLayer.name): \(preset.subtitle)")
+        .contextMenu {
+            if let custom {
+                Button("Edit…") { model.sheet = .presetEditor(custom) }
+                Button("Export…") { export(custom) }
+                Divider()
+                Button("Delete", role: .destructive) { model.deleteCustomPreset(custom.id) }
+            } else {
+                Button("Apply to \(model.activeLayer.name)") { model.applyPreset(preset) }
+            }
+        }
+    }
+
+    private func export(_ preset: CustomPreset) {
+        let panel = NSSavePanel()
+        panel.nameFieldStringValue = "\(preset.title).minikeys-preset"
+        panel.allowedContentTypes = [UTType(filenameExtension: "minikeys-preset") ?? .json]
+        panel.message = "Share this file: anyone can import it in MiniKeys"
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        do {
+            try model.exportPreset(preset, to: url)
+            model.showToast("Exported “\(preset.title)”", isError: false)
+        } catch {
+            model.showToast(error.localizedDescription, isError: true)
+        }
+    }
+}
+
+// MARK: - Sheets
+
+private struct LayerSettingsSheet: View {
+    @EnvironmentObject private var model: AppModel
+    @Environment(\.dismiss) private var dismiss
+    let layerID: UUID
+    @State private var name = ""
+    @State private var color = Color.blue
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Layer")
+                .font(.headline)
+            Form {
+                TextField("Name", text: $name)
+                ColorPicker("Color", selection: $color, supportsOpacity: false)
+            }
+            .formStyle(.grouped)
+            HStack {
+                Button("Delete Layer", role: .destructive) {
+                    model.deleteLayer(layerID)
+                    dismiss()
+                }
+                .disabled(model.layers.count == 1)
+                Spacer()
+                Button("Cancel") { dismiss() }
+                    .keyboardShortcut(.cancelAction)
+                Button("Done") {
+                    model.updateLayer(layerID, name: name, color: RGB(color))
+                    dismiss()
+                }
+                .keyboardShortcut(.defaultAction)
+                .buttonStyle(.borderedProminent)
+            }
+        }
+        .padding(20)
+        .frame(width: 380)
+        .onAppear {
+            if let layer = model.layers.first(where: { $0.id == layerID }) {
+                name = layer.name
+                color = layer.color.color
+            }
+        }
+    }
+}
+
+private struct PresetEditorSheet: View {
+    @EnvironmentObject private var model: AppModel
+    @Environment(\.dismiss) private var dismiss
+    let preset: CustomPreset?
+    @State private var title = ""
+    @State private var symbol = CustomPreset.symbols[0]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text(preset == nil ? "Save \(model.activeLayer.name) as a Preset" : "Edit Preset")
+                .font(.headline)
+            Form {
+                TextField("Name", text: $title, prompt: Text("Geometry Dash, Figma…"))
+                LabeledContent("Icon") {
+                    LazyVGrid(columns: Array(repeating: GridItem(.fixed(30), spacing: 6), count: 7), spacing: 6) {
+                        ForEach(CustomPreset.symbols, id: \.self) { name in
+                            Button {
+                                symbol = name
+                            } label: {
+                                Image(systemName: name)
+                                    .frame(width: 30, height: 30)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 7)
+                                            .fill(symbol == name ? Color.accentColor.opacity(0.25) : Color.clear)
+                                    )
+                                    .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.pressable)
+                            .accessibilityLabel(name)
+                        }
+                    }
+                }
+            }
+            .formStyle(.grouped)
+            if preset == nil {
+                Text("Saves the keys and knob of \(model.activeLayer.name). Export it later to share it.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            HStack {
+                Spacer()
+                Button("Cancel") { dismiss() }
+                    .keyboardShortcut(.cancelAction)
+                Button(preset == nil ? "Save" : "Done") {
+                    if var preset {
+                        preset.title = title.isEmpty ? preset.title : String(title.prefix(40))
+                        preset.symbol = symbol
+                        model.updateCustomPreset(preset)
+                    } else {
+                        model.saveActiveLayerAsPreset(title: title, symbol: symbol)
+                    }
+                    dismiss()
+                }
+                .keyboardShortcut(.defaultAction)
+                .buttonStyle(.borderedProminent)
+            }
+        }
+        .padding(20)
+        .frame(width: 420)
+        .onAppear {
+            title = preset?.title ?? ""
+            symbol = preset?.symbol ?? CustomPreset.symbols[0]
+        }
+    }
+}
+
+// MARK: - Light
 
 private struct LightPanel: View {
     @EnvironmentObject private var model: AppModel
@@ -137,55 +522,75 @@ private struct FirmwareLightControls: View {
                 .disabled(settings.effect.canCycleColors && settings.multicolor)
             }
 
+            if settings.effect == .layer {
+                Text("Uses the color of the layer on the keypad. Change it from the layer's menu in the sidebar.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
             if settings.effect.usesSpeed {
-                LabeledSlider(title: "Speed", value: Binding(
+                LabeledSlider(title: "Speed:", value: Binding(
                     get: { Double(settings.speed) },
                     set: { value in model.updateLight { $0.speed = Int(value.rounded()) } }
-                ), range: 1...10)
+                ), range: 1...10, step: 1, minimumSymbol: "tortoise.fill", maximumSymbol: "hare.fill",
+                   valueText: "\(settings.speed) of 10")
             }
 
-            LabeledSlider(title: "Brightness", value: Binding(
+            LabeledSlider(title: "Brightness:", value: Binding(
                 get: { Double(settings.brightness) },
                 set: { value in model.updateLight { $0.brightness = Int(value.rounded()) } }
-            ), range: 10...255)
+            ), range: 10...255, minimumSymbol: "sun.min", maximumSymbol: "sun.max.fill",
+               valueText: "\(Int((Double(settings.brightness) / 255 * 100).rounded())) %")
 
-            HStack(spacing: 8) {
-                Text("Layers")
-                Spacer()
-                ForEach(0..<AppModel.layerCount, id: \.self) { layer in
-                    ColorPicker("Layer \(layer + 1)", selection: Binding(
-                        get: { settings.layerColors[layer].color },
-                        set: { color in model.updateLight { $0.layerColors[layer] = RGB(color) } }
-                    ), supportsOpacity: false)
-                    .labelsHidden()
-                    .help("Layer \(layer + 1)")
-                }
-            }
-
-            Toggle("Blink layer number on switch", isOn: Binding(
+            Toggle("Show layer color on switch", isOn: Binding(
                 get: { settings.flashesLayer },
                 set: { value in model.updateLight { $0.flashesLayer = value } }
             ))
-            .help("The keypad blinks once per layer number, in the layer's color")
-
-            Text("MiniKeys firmware: changes show right away and are saved on the keypad.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
+            .help("The keypad briefly lights up in the layer's color when you switch layers")
         }
     }
 }
 
+/// HIG: a labeled slider (label ending in a colon), icons for its minimum and maximum, tick marks
+/// for stepped values, the exact value in a tooltip, and a bounded width so it never stretches.
 private struct LabeledSlider: View {
     let title: String
     @Binding var value: Double
     let range: ClosedRange<Double>
+    var step: Double? = nil
+    let minimumSymbol: String
+    let maximumSymbol: String
+    let valueText: String
 
     var body: some View {
-        HStack {
+        HStack(spacing: 8) {
             Text(title)
-                .frame(width: 76, alignment: .leading)
-            Slider(value: $value, in: range)
+                .frame(width: 84, alignment: .leading)
+            Group {
+                if let step {
+                    Slider(value: $value, in: range, step: step) {
+                        Text(title)
+                    } minimumValueLabel: {
+                        Image(systemName: minimumSymbol)
+                    } maximumValueLabel: {
+                        Image(systemName: maximumSymbol)
+                    }
+                } else {
+                    Slider(value: $value, in: range) {
+                        Text(title)
+                    } minimumValueLabel: {
+                        Image(systemName: minimumSymbol)
+                    } maximumValueLabel: {
+                        Image(systemName: maximumSymbol)
+                    }
+                }
+            }
+            .labelsHidden()
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: 220)
+            .help(valueText)
+            Spacer(minLength: 0)
         }
     }
 }
@@ -198,65 +603,56 @@ private struct FirmwarePanel: View {
     var body: some View {
         Card {
             VStack(alignment: .leading, spacing: 10) {
-                Label("Firmware", systemImage: "cpu")
+                Label("Keypad", systemImage: "cpu")
                     .font(.headline)
                 if !model.device.isConnected {
                     Text("Connect the keypad to see its firmware.")
                         .foregroundStyle(.secondary)
                 } else if let version = model.device.firmwareVersion {
                     Label("MiniKeys firmware \(version)", systemImage: "checkmark.seal.fill")
-                    Text("All light effects and colors are available. Updates install over USB with MiniKeys Flasher.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
+                    if model.savedLayerCount > 0 {
+                        comboControls
+                    } else {
+                        Text("Update to firmware 4 to save 3 layers on the keypad and switch them there.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                     Link("Update Firmware…", destination: Self.installerURL)
+                        .font(.callout)
                 } else {
                     Label("Stock firmware", systemImage: "seal")
-                    Text("Install the MiniKeys firmware for any color, more effects and instant layers. The first install means opening the keypad once.")
+                    Text("The MiniKeys firmware adds any color, more effects, and 3 layers you can switch on the keypad.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                     Link("Install MiniKeys Firmware…", destination: Self.installerURL)
+                        .font(.callout)
                 }
             }
         }
     }
-}
 
-private struct PresetPanel: View {
-    @EnvironmentObject private var model: AppModel
-
-    var body: some View {
-        Card {
-            VStack(alignment: .leading, spacing: 10) {
-                Label("Presets", systemImage: "square.grid.2x2")
-                    .font(.headline)
-                ForEach(Presets.all) { preset in
-                    Button {
-                        model.applyPreset(preset)
-                    } label: {
-                        HStack(spacing: 10) {
-                            Image(systemName: preset.symbol)
-                                .frame(width: 22)
-                                .foregroundStyle(Color.accentColor)
-                            VStack(alignment: .leading, spacing: 1) {
-                                Text(preset.title).font(.callout.weight(.semibold))
-                                Text(preset.subtitle).font(.caption).foregroundStyle(.secondary).lineLimit(1)
-                            }
-                            Spacer(minLength: 0)
-                        }
-                        .padding(8)
-                        .background(RoundedRectangle(cornerRadius: 8).fill(Color.primary.opacity(0.04)))
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.pressable)
-                    .help("Sets up all of layer \(model.activeLayer + 1) at once")
-                }
-            }
+    private var comboControls: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Divider()
+            Toggle("Press and turn the knob to switch layers", isOn: Binding(
+                get: { model.switchesLayersOnKeypad },
+                set: { model.setSwitchesLayersOnKeypad($0) }
+            ))
+            Text(model.switchesLayersOnKeypad
+                 ? "Turn right for the next saved layer, left for the previous one; the keys blink its number in its color. A knob press acts when you let go."
+                 : "The knob's press and turns always do their own actions.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 }
 
+// MARK: - Shared
+
+/// A content-layer card on a standard material (Liquid Glass is reserved for controls).
 struct Card<Content: View>: View {
     @ViewBuilder let content: Content
 
@@ -264,13 +660,10 @@ struct Card<Content: View>: View {
         content
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(Color(nsColor: .controlBackgroundColor))
-            )
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
             .overlay(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .strokeBorder(Color.primary.opacity(0.08))
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .strokeBorder(.primary.opacity(0.07))
             )
     }
 }
@@ -284,8 +677,57 @@ private struct ToastView: View {
             .foregroundStyle(toast.isError ? Color.orange : Color.green)
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
-            .background(.regularMaterial, in: Capsule())
-            .shadow(color: .black.opacity(0.15), radius: 8, y: 3)
+            .liquidGlass(in: Capsule())
+            .shadow(color: .black.opacity(0.12), radius: 8, y: 3)
+    }
+}
+
+extension View {
+    /// Liquid Glass on macOS 26 and later, a translucent material before. For floating controls only.
+    @ViewBuilder
+    func liquidGlass<S: Shape>(in shape: S, interactive: Bool = false) -> some View {
+        if #available(macOS 26.0, *) {
+            glassEffect(interactive ? .regular.interactive() : .regular, in: shape)
+        } else {
+            background(.thinMaterial, in: shape)
+        }
+    }
+}
+
+/// HIG: one primary action, on the trailing side of the toolbar. On macOS 26 it's the round,
+/// tinted Liquid Glass button on its own (without the toolbar's shared glass behind it); before,
+/// a filled prominent button.
+private struct SaveToKeypadToolbarItem: ToolbarContent {
+    @EnvironmentObject private var model: AppModel
+
+    var body: some ToolbarContent {
+        if #available(macOS 26.0, *) {
+            ToolbarItem(placement: .primaryAction) {
+                button
+                    .buttonStyle(.glassProminent)
+                    .buttonBorderShape(.circle)
+            }
+            .sharedBackgroundVisibility(.hidden)
+        } else {
+            ToolbarItem(placement: .primaryAction) {
+                button
+                    .buttonStyle(.borderedProminent)
+            }
+        }
+    }
+
+    private var button: some View {
+        Button {
+            model.writeAll()
+        } label: {
+            Label("Save to Keypad", systemImage: "checkmark")
+        }
+        .tint(.blue)
+        // HIG: the tooltip says what the button does when the pointer rests on it.
+        .help(model.device.isConnected
+              ? "Save \(model.activeLayer.name) to the mini keypad (⇧⌘R)"
+              : "Connect the mini keypad to save to it")
+        .disabled(!model.device.isConnected)
     }
 }
 

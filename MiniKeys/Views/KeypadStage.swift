@@ -17,13 +17,17 @@ struct KeypadStage: View {
             statusLine
         }
         .padding(.vertical, 22)
+        .padding(.horizontal, 16)
         .frame(maxWidth: .infinity)
         .background(
-            LinearGradient(
-                colors: [Color(white: 0.13), Color(white: 0.07)],
-                startPoint: .top, endPoint: .bottom
-            )
+            // A dark, translucent stage so the lights read well in light and dark mode.
+            ZStack {
+                Rectangle().fill(.ultraThinMaterial)
+                Color.black.opacity(0.55)
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         )
+        .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(.white.opacity(0.08)))
         .environment(\.colorScheme, .dark)
     }
 
@@ -119,7 +123,7 @@ struct KeypadStage: View {
         case .solid:
             return (color, brightness)
         case .layer:
-            return (settings.layerColors[model.activeLayer].color, brightness)
+            return (model.activeLayer.color.color, brightness)
         case .breathe:
             let p = phase(Self.breathePeriod[speedIndex])
             let level = max(12, p < 128 ? p * 2 : (255 - p) * 2)
@@ -302,7 +306,8 @@ private struct KnobView: View {
                 .font(.system(size: 13, weight: .bold))
                 .foregroundStyle(model.selected == control || isActive ? Color.accentColor : .white.opacity(0.55))
                 .frame(width: 26, height: 26)
-                .background(Circle().fill(.white.opacity(isActive ? 0.25 : 0.08)))
+                .liquidGlass(in: Circle(), interactive: true)
+                .background(Circle().fill(Color.accentColor.opacity(isActive ? 0.5 : 0)))
         }
         .buttonStyle(.pressable)
         .help(control.title)
@@ -327,8 +332,9 @@ private struct KnobActionChip: View {
             .font(.callout)
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
+            .liquidGlass(in: Capsule(), interactive: true)
             .background(
-                Capsule().fill(isActive ? Color.accentColor.opacity(0.5) : .white.opacity(isSelected ? 0.16 : 0.07))
+                Capsule().fill(isActive ? Color.accentColor.opacity(0.5) : .white.opacity(isSelected ? 0.12 : 0))
             )
             .overlay(Capsule().strokeBorder(isSelected ? Color.accentColor : .clear, lineWidth: 2))
         }
