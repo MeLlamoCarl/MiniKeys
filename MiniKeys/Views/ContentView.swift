@@ -64,7 +64,9 @@ private struct LayerSidebar: View {
     var body: some View {
         List(selection: Binding(
             get: { Optional(model.activeLayerID) },
-            set: { if let id = $0 { model.activateLayer(id) } }
+            // Only clicks switch layers: the keypad itself can send ↑ ↓ (the AI preset's knob), and
+            // the arrow keys would move the sidebar selection. ⌘[ and ⌘] switch from the keyboard.
+            set: { if let id = $0, NSApp.currentEvent?.type != .keyDown { model.activateLayer(id) } }
         )) {
             Section {
                 ForEach(Array(model.layers.enumerated()), id: \.element.id) { index, layer in

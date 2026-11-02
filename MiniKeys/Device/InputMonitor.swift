@@ -25,13 +25,21 @@ final class InputMonitor: ObservableObject {
         refreshAccess()
         localMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .keyUp, .flagsChanged]) { [weak self] event in
             self?.handleLocal(event)
-            return event
+            return Self.reachesSidebar(event) ? nil : event
         }
         NotificationCenter.default.addObserver(
             forName: NSApplication.didBecomeActiveNotification, object: nil, queue: .main
         ) { [weak self] _ in
             self?.start()
         }
+    }
+
+    /// Keys typed while the layer sidebar has focus are kept from it: the keypad sends keys too
+    /// (the AI preset's knob sends ↑ ↓), which would move the selection. Menu shortcuts still work.
+    private static func reachesSidebar(_ event: NSEvent) -> Bool {
+        event.type == .keyDown
+            && !event.modifierFlags.contains(.command)
+            && event.window?.firstResponder is NSTableView
     }
 
     func start() {
