@@ -4,6 +4,10 @@ import SwiftUI
 struct MiniKeysApp: App {
     @StateObject private var model = AppModel()
 
+    init() {
+        LaunchAtLogin.refresh()
+    }
+
     var body: some Scene {
         Window("MiniKeys", id: "main") {
             ContentView()
@@ -124,6 +128,7 @@ private struct MenuBarContent: View {
         Divider()
         TourMenuButton()
         AboutMenuButton()
+        Toggle("Launch at Login", isOn: $model.launchesAtLogin)
         Divider()
         Button("Open MiniKeys…") {
             openWindow(id: "main")

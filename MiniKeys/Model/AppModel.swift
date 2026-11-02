@@ -52,6 +52,10 @@ final class AppModel: ObservableObject {
     /// once it's in view.
     @Published private(set) var tourTarget: TourStep?
     @Published private(set) var tourPopover: TourStep?
+    /// Opens MiniKeys in the menu bar at login (a LaunchAgent).
+    @Published var launchesAtLogin = LaunchAtLogin.isEnabled {
+        didSet { LaunchAtLogin.setEnabled(launchesAtLogin) }
+    }
     private var tourPopoverShownAt = Date.distantPast
 
     let device = KeyboardDevice()

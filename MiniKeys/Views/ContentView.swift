@@ -18,6 +18,7 @@ enum AppSheet: Identifiable {
 
 struct ContentView: View {
     @EnvironmentObject private var model: AppModel
+    private static var didStart = false
 
     var body: some View {
         NavigationSplitView {
@@ -52,6 +53,23 @@ struct ContentView: View {
             guard !model.hasSeenTour else { return }
             try? await Task.sleep(nanoseconds: 500_000_000)
             model.showWelcome()
+        }
+        // In the Dock only while the window is open; closed, MiniKeys keeps running in the menu bar.
+        .onAppear {
+            // Started at login: only the menu bar, the window stays closed until it's opened.
+            if LaunchAtLogin.wasLaunchedAtLogin, !Self.didStart {
+                Self.didStart = true
+                DispatchQueue.main.async {
+                    NSApp.windows.filter { $0.isVisible && $0.canBecomeMain }.forEach { $0.close() }
+                }
+                return
+            }
+            Self.didStart = true
+            NSApp.setActivationPolicy(.regular)
+            DispatchQueue.main.async { NSApp.activate(ignoringOtherApps: true) }
+        }
+        .onDisappear {
+            NSApp.setActivationPolicy(.accessory)
         }
     }
 }
