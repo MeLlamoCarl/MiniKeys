@@ -3,11 +3,13 @@ import UniformTypeIdentifiers
 
 /// Sheets the window can show, also opened from the menu bar commands.
 enum AppSheet: Identifiable {
+    case welcome
     case layerSettings(UUID)
     case presetEditor(CustomPreset?)          // nil: save the active layer as a new preset
 
     var id: String {
         switch self {
+        case .welcome: "welcome"
         case .layerSettings(let id): "layer-\(id)"
         case .presetEditor(let preset): "preset-\(preset?.id.uuidString ?? "new")"
         }
@@ -33,6 +35,7 @@ struct ContentView: View {
         }
         .sheet(item: $model.sheet) { sheet in
             switch sheet {
+            case .welcome: WelcomeSheet()
             case .layerSettings(let id): LayerSettingsSheet(layerID: id)
             case .presetEditor(let preset): PresetEditorSheet(preset: preset)
             }
@@ -43,6 +46,12 @@ struct ContentView: View {
                     .padding(.bottom, 20)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
+        }
+        .task {
+            // First launch: the welcome sheet, once the window has settled.
+            guard !model.hasSeenTour else { return }
+            try? await Task.sleep(nanoseconds: 500_000_000)
+            model.showWelcome()
         }
     }
 }
@@ -80,10 +89,11 @@ private struct LayerSidebar: View {
             }
         }
         .listStyle(.sidebar)
+        .tourStop(.layers, arrowEdge: .trailing)
         .safeAreaInset(edge: .bottom) {
             VStack(alignment: .leading, spacing: 4) {
                 if model.savedLayerCount > 0 {
-                    Text("\(Image(systemName: "keyboard")) Saved on the keypad. Drag to choose which; press and turn the knob to switch.")
+                    Text("\(Image(systemName: "keyboard")) Saved on the keypad. Drag to choose which.")
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 Text("\(model.layers.count) of \(KeypadLayer.maxCount) layers")
@@ -162,26 +172,36 @@ struct LayerMenuItems: View {
 // MARK: - Detail
 
 private struct DetailView: View {
+    @EnvironmentObject private var model: AppModel
+
     var body: some View {
         GeometryReader { proxy in
-            ScrollView {
-                VStack(spacing: 16) {
-                    KeypadStage()
-                    // Side by side when there is room, stacked in narrow windows.
-                    if proxy.size.width >= 820 {
-                        HStack(alignment: .top, spacing: 16) {
-                            mainColumn
-                            sideColumn
-                                .frame(width: 300)
-                        }
-                    } else {
-                        VStack(spacing: 16) {
-                            mainColumn
-                            sideColumn
+            ScrollViewReader { scroller in
+                ScrollView {
+                    VStack(spacing: 16) {
+                        KeypadStage()
+                            .tourStop(.keypad)
+                        // Side by side when there is room, stacked in narrow windows.
+                        if proxy.size.width >= 820 {
+                            HStack(alignment: .top, spacing: 16) {
+                                mainColumn
+                                sideColumn
+                                    .frame(width: 300)
+                            }
+                        } else {
+                            VStack(spacing: 16) {
+                                mainColumn
+                                sideColumn
+                            }
                         }
                     }
+                    .padding(20)
                 }
-                .padding(20)
+                .onChange(of: model.tourTarget) { step in
+                    guard let step, step.isInDetail else { return }
+                    // Without animation, so the view is in place when its popover opens.
+                    scroller.scrollTo(step, anchor: .center)
+                }
             }
         }
         .background(WindowMaterial())
@@ -190,20 +210,24 @@ private struct DetailView: View {
     private var mainColumn: some View {
         VStack(spacing: 16) {
             ActionEditor()
+                .tourStop(.editor, arrowEdge: .trailing)
             PresetsPanel()
+                .tourStop(.presets, arrowEdge: .trailing)
         }
     }
 
     private var sideColumn: some View {
         VStack(spacing: 16) {
             LightPanel()
+                .tourStop(.light, arrowEdge: .leading)
             FirmwarePanel()
+                .tourStop(.firmware, arrowEdge: .leading)
         }
     }
 }
 
 /// Translucent window background (content layer: a standard material, per the HIG).
-private struct WindowMaterial: NSViewRepresentable {
+struct WindowMaterial: NSViewRepresentable {
     func makeNSView(context: Context) -> NSVisualEffectView {
         let view = NSVisualEffectView()
         view.material = .underWindowBackground
@@ -603,13 +627,13 @@ private struct FirmwarePanel: View {
     var body: some View {
         Card {
             VStack(alignment: .leading, spacing: 10) {
-                Label("Keypad", systemImage: "cpu")
+                // One line says which firmware the keypad runs.
+                Label(firmwareTitle, systemImage: "memorychip")
                     .font(.headline)
                 if !model.device.isConnected {
                     Text("Connect the keypad to see its firmware.")
                         .foregroundStyle(.secondary)
-                } else if let version = model.device.firmwareVersion {
-                    Label("MiniKeys firmware \(version)", systemImage: "checkmark.seal.fill")
+                } else if model.device.firmwareVersion != nil {
                     if model.savedLayerCount > 0 {
                         comboControls
                     } else {
@@ -621,7 +645,6 @@ private struct FirmwarePanel: View {
                     Link("Update Firmware…", destination: Self.installerURL)
                         .font(.callout)
                 } else {
-                    Label("Stock firmware", systemImage: "seal")
                     Text("The MiniKeys firmware adds any color, more effects, and 3 layers you can switch on the keypad.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -633,20 +656,43 @@ private struct FirmwarePanel: View {
         }
     }
 
+    private var firmwareTitle: String {
+        guard model.device.isConnected else { return "Keypad" }
+        return model.device.firmwareVersion.map { "MiniKeys Firmware \($0)" } ?? "Stock Firmware"
+    }
+
     private var comboControls: some View {
         VStack(alignment: .leading, spacing: 6) {
             Divider()
-            Toggle("Press and turn the knob to switch layers", isOn: Binding(
+            Toggle("Switch layers with the knob", isOn: Binding(
                 get: { model.switchesLayersOnKeypad },
                 set: { model.setSwitchesLayersOnKeypad($0) }
             ))
+            if model.switchesLayersOnKeypad {
+                gestureHint("arrow.clockwise", "Next saved layer")
+                gestureHint("arrow.counterclockwise", "Previous saved layer")
+            }
             Text(model.switchesLayersOnKeypad
-                 ? "Turn right for the next saved layer, left for the previous one; the keys blink its number in its color. A knob press acts when you let go."
+                 ? "The keys blink the layer's number in its color. A knob press acts when you let go."
                  : "The knob's press and turns always do their own actions.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
+    }
+
+    /// "⊙ + ↻  Next saved layer": press the knob and turn it this way.
+    private func gestureHint(_ turn: String, _ title: String) -> some View {
+        HStack(spacing: 4) {
+            Image(systemName: "digitalcrown.horizontal.press")
+            Text("+")
+            Image(systemName: turn)
+            Text(title).padding(.leading, 4)
+        }
+        .font(.callout)
+        .foregroundStyle(.secondary)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Press and turn the knob \(turn == "arrow.clockwise" ? "right" : "left"): \(title)")
     }
 }
 
@@ -728,6 +774,7 @@ private struct SaveToKeypadToolbarItem: ToolbarContent {
               ? "Save \(model.activeLayer.name) to the mini keypad (⇧⌘R)"
               : "Connect the mini keypad to save to it")
         .disabled(!model.device.isConnected)
+        .tourStop(.save)
     }
 }
 

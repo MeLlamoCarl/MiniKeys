@@ -48,6 +48,11 @@ final class AppModel: ObservableObject {
     @Published var sheet: AppSheet?
     /// Pressing and turning the knob switches the saved layers on the keypad (firmware 4+).
     @Published private(set) var switchesLayersOnKeypad: Bool
+    /// Welcome tour: `tourTarget` scrolls the window to a step, `tourPopover` shows its popover
+    /// once it's in view.
+    @Published private(set) var tourTarget: TourStep?
+    @Published private(set) var tourPopover: TourStep?
+    private var tourPopoverShownAt = Date.distantPast
 
     let device = KeyboardDevice()
     let input = InputMonitor()
@@ -62,6 +67,7 @@ final class AppModel: ObservableObject {
         static let customPresets = "customPresets"
         static let switchesLayersOnKeypad = "switchesLayersOnKeypad"
         static let ledMode = "ledMode"
+        static let hasSeenTour = "hasSeenTour"
         static let dimsWhenLocked = "dimsWhenLocked"
         static let lightSettings = "lightSettings"
     }
@@ -158,6 +164,43 @@ final class AppModel: ObservableObject {
     func writeAll() {
         write(layerPackets(activeLayer, slot: keypadSlot(for: activeIndex)) + selectPackets(for: activeIndex),
               success: "\(activeLayer.name) written to the keypad")
+    }
+
+    // MARK: - Welcome tour
+
+    var hasSeenTour: Bool { defaults.bool(forKey: Keys.hasSeenTour) }
+
+    /// First launch: the welcome sheet, which offers the tour.
+    func showWelcome() { sheet = .welcome }
+
+    func startTour() { showTourStep(.keypad) }
+
+    func showTourStep(_ step: TourStep) {
+        tourPopover = nil
+        tourTarget = step
+        // Give the window time to scroll the step into view before the popover points at it.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
+            guard let self, self.tourTarget == step else { return }
+            self.tourPopoverShownAt = Date()
+            self.tourPopover = step
+        }
+    }
+
+    /// A popover that closes right after it opened was closed by the system while its view was
+    /// still moving, not by the person: it's shown again. Otherwise (Esc, a click outside) the
+    /// tour ends.
+    func tourPopoverClosed(_ step: TourStep) {
+        if Date().timeIntervalSince(tourPopoverShownAt) < 0.6 {
+            showTourStep(step)
+        } else {
+            endTour()
+        }
+    }
+
+    func endTour() {
+        tourTarget = nil
+        tourPopover = nil
+        defaults.set(true, forKey: Keys.hasSeenTour)
     }
 
     func setLEDMode(_ mode: LEDMode) {

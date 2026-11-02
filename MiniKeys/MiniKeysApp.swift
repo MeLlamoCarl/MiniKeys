@@ -14,6 +14,15 @@ struct MiniKeysApp: App {
         .windowToolbarStyle(.unified(showsTitle: true))
         .commands { KeyboardCommands(model: model) }
 
+        Window("About MiniKeys", id: "about") {
+            AboutView()
+        }
+        .windowStyle(.hiddenTitleBar)
+        .windowResizability(.contentSize)
+        .defaultPosition(.center)
+        // Opened from MiniKeys › About MiniKeys and the menu bar, not listed in the Window menu.
+        .commandsRemoved()
+
         MenuBarExtra("MiniKeys", systemImage: "keyboard.badge.ellipsis") {
             MenuBarContent()
                 .environmentObject(model)
@@ -26,6 +35,14 @@ private struct KeyboardCommands: Commands {
     @ObservedObject var model: AppModel
 
     var body: some Commands {
+        CommandGroup(replacing: .appInfo) {
+            AboutMenuButton()
+        }
+        CommandGroup(replacing: .help) {
+            TourMenuButton()
+                .environmentObject(model)
+            Link("MiniKeys on GitHub", destination: URL(string: "https://github.com/MeLlamoCarl/MiniKeys")!)
+        }
         CommandMenu("Keypad") {
             Button("New Layer") { model.addLayer() }
                 .keyboardShortcut("n", modifiers: .command)
@@ -104,6 +121,9 @@ private struct MenuBarContent: View {
                 ForEach(LEDMode.allCases, id: \.self) { Text($0.title).tag(Optional($0)) }
             }
         }
+        Divider()
+        TourMenuButton()
+        AboutMenuButton()
         Divider()
         Button("Open MiniKeys…") {
             openWindow(id: "main")
