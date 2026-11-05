@@ -18,7 +18,7 @@ as "MINI KeyBoard"). It replaces the vendor's Windows tool.
   </tr>
 </table>
 
-<p align="center"><img src="docs/images/keypad-rainbow.jpg" width="420" alt="The keypad with the rainbow effect"><br>
+<p align="center"><img src="docs/images/keypad-top.jpg" width="400" alt="The keypad from above, with the rainbow effect"> <img src="docs/images/keypad-side.jpg" width="400" alt="The keypad from the side, lit"><br>
 <sub>The keypad running the MiniKeys firmware's rainbow effect</sub></p>
 
 - **On-screen keypad**: shows the 3 keys and the knob with what each one does, the RGB light as
